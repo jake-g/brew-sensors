@@ -39,7 +39,7 @@ def main(args):
         'tilt': sensors.TiltHydrometer(args.tilt_color),
         'ambient_temp': sensors.TemperatureMCP9808()
     }
-
+    last_backup = time.time()
     while True:
         res = {k: s.get_result() for k, s in sensors_to_log.items()}
         # TODO maybe log all info in seonsr dict? need to remove unneded keys (like unit) and make keys unique
@@ -52,13 +52,19 @@ def main(args):
         ])
         logging.debug('Last 5 entries:\n%s\n' % gsheet.get_df())
         logging.debug('Sleeping for %d seconds' % args.log_period)
+        if (time.time() - last_backup) > args.backup_period:
+            gsheet.dump_sheet('log_backup.tsv')
+
         time.sleep(args.log_period)
+
+# TODO add backup to file
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Log various sensors related to homebrew")
     parser.add_argument("--log_file", default='log.tsv', help="CSV filename for log output", type=str)
     parser.add_argument("--log_period", default=120, help="How frequently (seconds) to log", type=float)
+    parser.add_argument("--backuo_period", default=60*20, help="How frequently (seconds) to backup data to file", type=float)
     parser.add_argument("--tilt_color", default='black', help="Color of the tilt you want to check", type=str)
     parser.add_argument("--lat", default=47.6540872, help="Current location latitude", type=float)
     parser.add_argument("--lng", default=-122.3340208, help="Current location longitude", type=float)

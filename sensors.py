@@ -40,7 +40,6 @@ class Forcast(Sensor):
         try:
             darksky_forcast = forecastio.load_forecast(self.api_key, self.lat, self.lng).currently()
             return darksky_forcast.__dict__
-            # darksky_temp = float(darksky_forcast.temperature)
         except Exception as e:
             logging.error('Failed to get DarkSky data...\n%s' % e)
 
@@ -54,7 +53,7 @@ class TiltHydrometer(Sensor):
             tilt_reading = get_tilt(self.color)
             return {
                 'temperature': float(tilt_reading.get_temp(celcius=self.use_celcius)),
-                'gravity': float(tilt_reading.get_gravity())
+                'gravity': float(tilt_reading.get_gravity()),
                 'temperature_unit': 'C' if self.use_celcius else 'F'
             }
         except Exception as e:

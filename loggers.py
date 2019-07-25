@@ -11,7 +11,6 @@ from oauth2client.service_account import ServiceAccountCredentials
 log_level = logging.WARNING  # logging.DEBUG
 logging.basicConfig(level=log_level)
 
-
 class gSheetLogger:
     def __init__(self, key_file, gsheet_name, sheet_idx=0):
         self.name = gsheet_name
