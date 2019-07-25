@@ -1,0 +1,5 @@
+python-forecastio
+oauth2client
+gspread
+pandas
+pybluez

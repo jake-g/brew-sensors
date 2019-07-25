@@ -1,3 +1,7 @@
+.ipynb_checkpoints/
+.idea/
+auth/
+
 *.pyc
 *.tsv
 .DS_Store
