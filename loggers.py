@@ -8,8 +8,6 @@ import gspread
 import pandas
 from oauth2client.service_account import ServiceAccountCredentials
 
-log_level = logging.WARNING  # logging.DEBUG
-logging.basicConfig(level=log_level)
 
 class gSheetLogger:
     def __init__(self, key_file, gsheet_name, sheet_idx=0):
@@ -45,7 +43,6 @@ class gSheetLogger:
         _header = self.sheet.row_values(1)  # i guess header starts at row 1
         if _header:
             self.header = _header
-            logging.debug('Set header to:\n%s' % self.header)
         else:
             logging.warning('Sheet has no header data!')
 
@@ -59,6 +56,7 @@ class gSheetLogger:
                                 columns=self.header)
 
     def dump_sheet(self, filename, sep='\t'):
+        logging.debug('Dumping sheet to %s...' % filename)
         self.get_df().to_csv(filename, sep=sep, header=True)
 
 
@@ -72,11 +70,11 @@ class TsvLogger:
     def init_log(self):
         if not os.path.exists(self.file):
             logging.debug('Log file doesnt exist, creating it...')
-            self.write_row(self.header)
+            self.append_row(self.header)
         else:
             logging.debug('Appending to existing logfile %s...' % self.file)
 
-    def write_row(self, row):
+    def append_row(self, row):
         if len(row) != self.n_cols:
             raise ValueError('row of length %d != %d n_cols' % (len(row), self.n_cols))
         row_str = '\t'.join([str(t) for t in row])
