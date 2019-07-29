@@ -17,22 +17,6 @@ expected_header = ['clock_time', 'tilt_gravity', 'tilt_temperature', 'ambient_te
                    'local_windBearing', 'local_windGust', 'local_windSpeed']
 
 
-def init_gsheet(args):
-    try:
-        gsheet = gSheetLogger(key_file=args.gsheet_secret, gsheet_name=args.gsheet_name,
-                              sheet_idx=1 if args.debug else 0)  # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-        if not gsheet.header:
-            gsheet.insert_header(expected_header)
-        elif gsheet.header != expected_header:
-            logging.warning(
-                'Expected header differs from gsheet header!\n expected (len=%d): %s\n gsheet (len=%d): %s' % (
-                    len(expected_header), expected_header, len(gsheet.header), gsheet.header))
-        return gsheet
-    except Exception as e:
-        logging.error('Failed to fetch gsheet: %s...\n%s' % (args.gsheet_name, e))
-
-
 def main(args):
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)
@@ -41,7 +25,8 @@ def main(args):
         logging.basicConfig(level=logging.INFO)
 
     tsv_log = TsvLogger(args.log_file, expected_header)
-    gsheet = init_gsheet(args)
+    gsheet = gSheetLogger(key_file=args.gsheet_secret, gsheet_name=args.gsheet_name, header=expected_header,
+                          sheet_idx=1 if args.debug else 0)
 
     if args.log_period < 90:
         logging.warning(
@@ -70,7 +55,8 @@ def main(args):
             except Exception as e:
                 logging.error('Failed to append to gsheet: %s...\n%s' % (args.gsheet_name, e))
                 logging.error('Trying to re-initialize gsheet: %s...' % args.gsheet_name)
-                gsheet = init_gsheet(args)
+                gsheet = gSheetLogger(key_file=args.gsheet_secret, gsheet_name=args.gsheet_name, header=expected_header,
+                                      sheet_idx=1 if args.debug else 0)
             try:
                 tsv_log.append_row(row)
             except Exception as e:
