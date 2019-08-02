@@ -1,10 +1,9 @@
 #!/usr/bin/python
 from __future__ import print_function
 
+import gspread
 import logging
 import os
-
-import gspread
 import pandas
 from oauth2client.service_account import ServiceAccountCredentials
 
@@ -64,7 +63,7 @@ class gSheetLogger:
         try:
             if not self.header:
                 self._insert_header(header)
-            elif self.sheet.header != header:
+            elif self.header != header:
                 logging.warning(
                     'Expected header differs from gsheet header!\n expected (len=%d): %s\n gsheet (len=%d): %s' % (
                         len(header), header, len(self.sheet.header), self.sheet.header))

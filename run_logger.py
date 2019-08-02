@@ -43,12 +43,24 @@ def main(args):
         'ambient': sensors.TemperatureMCP9808()
     }
     last_backup = time.time()
+    last_row_dict = {}
     while True:
         try:
             sensor_readings = {k: s.get_reading() for k, s in sensors_to_log.items()}  # TODO multiprocess this
-            row_dict = {'%s_%s' % (sns, key): value for sns, res in sensor_readings.items() for key, value in
-                        res.items()}
-            row = [row_dict.get(k, '') for k in expected_header]
+            row_dict = {
+                '%s_%s' % (sns, key): value for sns, res in
+                sensor_readings.items() for key, value in res.items()
+                }
+            row = []
+            for key in expected_header:
+                if key in row_dict:
+                    row.append(row_dict[key])
+                elif key in last_row_dict:
+                    logging.warning('New data entry missing key: %s using last entry...' % key)
+                    row.append(last_row_dict[key])
+                else:
+                    logging.warning('New and previous data entry missing key: %s, setting to None...' % key)
+                    row.append('')
             try:
                 gsheet.sheet.append_row(row)
                 logging.debug('First 5 columns of last 5 entries:\n%s\n' % gsheet.get_df()[expected_header[0:5]])
@@ -64,7 +76,11 @@ def main(args):
                 logging.error('Trying to re-initialize tsv: %s...' % args.log_file)
                 tsv_log = TsvLogger(args.log_file, expected_header)
 
-            if (time.time() - last_backup) > args.backup_period:
+            last_backup_elapsed = (time.time() - last_backup)
+            last_row_dict = row_dict
+            logging.debug('Last backup %d seconds seconds ago' % last_backup_elapsed)
+            logging.debug('Next backup %d in seconds' % (args.backup_period - last_backup_elapsed))
+            if last_backup_elapsed > args.backup_period:
                 gsheet.dump_sheet(args.backup_log_file)
                 last_backup = time.time()
         except Exception as e:
@@ -85,7 +101,7 @@ if __name__ == "__main__":
                         help="CSV filename for log output.")
     parser.add_argument("--backup_log_file", default='./logs/gsheet_bkp.tsv', type=str,
                         help="TSV filename for log output.")
-    parser.add_argument("--backup_period", default=60 * 60, type=float, help="How frequently (s) to backup to file.")
+    parser.add_argument("--backup_period", default=60 * 20, type=float, help="How frequently (s) to backup to file.")
     parser.add_argument("--tilt_color", default='black', type=str, help="Color of the tilt you want to check")
     parser.add_argument("--lat", default=47.654049, type=float, help="Current location latitude")
     parser.add_argument("--lng", default=-122.334159, type=float, help="Current location longitude")
