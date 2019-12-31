@@ -1,18 +1,15 @@
 #!/usr/bin/python
 from __future__ import print_function
 
+import gspread
 import logging
 import os
-
-import gspread
 import pandas
 from oauth2client.service_account import ServiceAccountCredentials
 
-log_level = logging.WARNING  # logging.DEBUG
-logging.basicConfig(level=log_level)
 
 class gSheetLogger:
-    def __init__(self, key_file, gsheet_name, sheet_idx=0):
+    def __init__(self, key_file, gsheet_name, sheet_idx=0, header=[]):
         self.name = gsheet_name
         self.sheet_idx = sheet_idx
         self.service_email = ''
@@ -21,6 +18,7 @@ class gSheetLogger:
         self.client = None
         self._authorize_client(key_file)
         self._get_sheet()
+        if header: self.init_header(header)
 
     def _authorize_client(self, key_file,
                           scope=('https://spreadsheets.google.com/feeds',
@@ -45,11 +43,10 @@ class gSheetLogger:
         _header = self.sheet.row_values(1)  # i guess header starts at row 1
         if _header:
             self.header = _header
-            logging.debug('Set header to:\n%s' % self.header)
         else:
             logging.warning('Sheet has no header data!')
 
-    def insert_header(self, header):
+    def _insert_header(self, header):
         self.sheet.insert_row(header, 1)
         self._set_header()
 
@@ -59,7 +56,19 @@ class gSheetLogger:
                                 columns=self.header)
 
     def dump_sheet(self, filename, sep='\t'):
+        logging.debug('Dumping sheet to %s...' % filename)
         self.get_df().to_csv(filename, sep=sep, header=True)
+
+    def init_header(self, header):
+        try:
+            if not self.header:
+                self._insert_header(header)
+            elif self.header != header:
+                logging.warning(
+                    'Expected header differs from gsheet header!\n expected (len=%d): %s\n gsheet (len=%d): %s' % (
+                        len(header), header, len(self.sheet.header), self.sheet.header))
+        except Exception as e:
+            logging.error('Failed to set gsheet header: %s...\n%s' % (self.name, e))
 
 
 class TsvLogger:
@@ -72,11 +81,11 @@ class TsvLogger:
     def init_log(self):
         if not os.path.exists(self.file):
             logging.debug('Log file doesnt exist, creating it...')
-            self.write_row(self.header)
+            self.append_row(self.header)
         else:
             logging.debug('Appending to existing logfile %s...' % self.file)
 
-    def write_row(self, row):
+    def append_row(self, row):
         if len(row) != self.n_cols:
             raise ValueError('row of length %d != %d n_cols' % (len(row), self.n_cols))
         row_str = '\t'.join([str(t) for t in row])

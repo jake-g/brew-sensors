@@ -16,9 +16,6 @@ class Sensor:
     def get_reading(self):
         return {}  # TODO enforce this is a dict
 
-    def get_col_name(self):
-        return ''
-
 
 class Timestamp(Sensor):
     def __init__(self, timezone='UTC', format='%m-%d-%Y %H:%M'):
@@ -27,37 +24,47 @@ class Timestamp(Sensor):
     def get_reading(self):
         return {'time': datetime.now(timezone(self.timezone)).strftime(self.format)}
 
-    def get_col_name(self):
-        return ''
-
 
 class Forcast(Sensor):
     def __init__(self, api_key, lat, lng):
         self.__dict__.update(locals())
+        self.last_reading = None
 
     def get_reading(self):
-
         try:
             darksky_forcast = forecastio.load_forecast(self.api_key, self.lat, self.lng).currently()
-            return darksky_forcast.__dict__
+            return darksky_forcast.d
         except Exception as e:
-            logging.error('Failed to get DarkSky data...\n%s' % e)
+            logging.error('Failed to get DarkSky data...\n  %s' % e)
+            return {}
 
 
 class TiltHydrometer(Sensor):
     def __init__(self, color, use_celcius=False):
         self.__dict__.update(locals())
+        self.last_reading = None
 
     def get_reading(self):
         try:
             tilt_reading = get_tilt(self.color)
-            return {
+            reading = {
                 'temperature': float(tilt_reading.get_temp(celcius=self.use_celcius)),
                 'gravity': float(tilt_reading.get_gravity()),
-                'temperature_unit': 'C' if self.use_celcius else 'F'
             }
+            self.last_reading = reading
+            return reading
+
         except Exception as e:
-            logging.error('Failed to get DarkSky data...\n%s' % e)
+            logging.error('Failed to get Tilt data...\n  %s' % e)
+            if self.last_reading is not None:
+                logging.info('Returning last tilt response.')
+                return self.last_reading
+            else:
+                logging.error('No last tilt reading, returning None.')
+                return {
+                    'temperature': None,
+                    'gravity': None,
+                }
 
 
 class TemperatureMCP9808(Sensor):
@@ -71,7 +78,7 @@ class TemperatureMCP9808(Sensor):
             self._sensor = MCP9808.MCP9808()
             self._sensor.begin()
         except Exception as e:
-            logging.error('Failed to initialize MCP9808 ambient temp sensor...\n%s' % e)
+            logging.error('Failed to initialize MCP9808 ambient temp sensor...\n  %s' % e)
 
     def get_reading(self):
         try:
@@ -80,7 +87,9 @@ class TemperatureMCP9808(Sensor):
                 ambient_temp = c_to_f(ambient_temp)
             return {
                 'temperature': ambient_temp,
-                'temperature_unit': 'C' if self.use_celcius else 'F'
             }
         except Exception as e:
-            logging.error('Failed to get MCP9808 ambient temp sensor data...\n%s' % e)
+            logging.error('Failed to get MCP9808 ambient temp sensor data...\n  %s' % e)
+            return {
+                'temperature': None
+            }
