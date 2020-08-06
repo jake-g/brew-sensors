@@ -4,4 +4,5 @@ auth/
 
 *.pyc
 *.tsv
+*.swp
 .DS_Store
