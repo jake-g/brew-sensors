@@ -1,7 +1,9 @@
 .ipynb_checkpoints/
 .idea/
 auth/
+old/
 
+*.zip
 *.pyc
 *.tsv
 *.swp
