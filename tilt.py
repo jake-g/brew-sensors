@@ -1,4 +1,3 @@
-#!/usr/bin/python
 from __future__ import print_function
 
 import argparse
@@ -7,6 +6,8 @@ import time
 import bluetooth._bluetooth as bluez
 
 import blescan
+
+from sensors import Sensor
 
 TILTS = {
     'a495bb10c5b14b44b5121370f02d74de': 'Red',
@@ -17,6 +18,34 @@ TILTS = {
     'a495bb60c5b14b44b5121370f02d74de': 'Blue',
     'a495bb70c5b14b44b5121370f02d74de': 'Pink'
 }
+
+# TODO: Untested moving thios from sensors.py!!!
+class TiltHydrometerSensor(Sensor):
+    def __init__(self, color, use_celcius=False):
+        self.__dict__.update(locals())
+        self.last_reading = None
+
+    def get_reading(self):
+        try:
+            tilt_reading = get_tilt(self.color)
+            reading = {
+                'temperature': float(tilt_reading.get_temp(celcius=self.use_celcius)),
+                'gravity': float(tilt_reading.get_gravity()),
+            }
+            self.last_reading = reading
+            return reading
+
+        except Exception as e:
+            logging.error('Failed to get Tilt data...\n  %s' % e)
+            if self.last_reading is not None:
+                logging.info('Returning last tilt response.')
+                return self.last_reading
+            else:
+                logging.error('No last tilt reading, returning None.')
+                return {
+                    'temperature': None,
+                    'gravity': None,
+                }
 
 
 class Tilt:

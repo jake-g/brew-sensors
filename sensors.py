@@ -1,16 +1,18 @@
 import logging
 from datetime import datetime
 
-import Adafruit_MCP9808.MCP9808 as MCP9808
 import forecastio
 from pytz import timezone
 
-from tilt import get_tilt
+import board
+import adafruit_ina219
+import adafruit_bh1750
+import adafruit_veml6070
+import adafruit_mcp9808 
 
-
-def c_to_f(c):
-    return c * 9.0 / 5.0 + 32.0
-
+TIMEZONE = 'US/Pacific' # 'UTC'
+# TODO: simplify sensors by beefing up sensor class
+# TODO: add relay and led as actuators.py
 
 class Sensor:
     def get_reading(self):
@@ -18,7 +20,7 @@ class Sensor:
 
 
 class Timestamp(Sensor):
-    def __init__(self, timezone='UTC', format='%m-%d-%Y %H:%M'):
+    def __init__(self, timezone=TIMEZONE, format='%m-%d-%Y %H:%M'):
         self.__dict__.update(locals())
 
     def get_reading(self):
@@ -38,58 +40,106 @@ class Forcast(Sensor):
             logging.error('Failed to get DarkSky data...\n  %s' % e)
             return {}
 
-
-class TiltHydrometer(Sensor):
-    def __init__(self, color, use_celcius=False):
-        self.__dict__.update(locals())
-        self.last_reading = None
-
-    def get_reading(self):
-        try:
-            tilt_reading = get_tilt(self.color)
-            reading = {
-                'temperature': float(tilt_reading.get_temp(celcius=self.use_celcius)),
-                'gravity': float(tilt_reading.get_gravity()),
-            }
-            self.last_reading = reading
-            return reading
-
-        except Exception as e:
-            logging.error('Failed to get Tilt data...\n  %s' % e)
-            if self.last_reading is not None:
-                logging.info('Returning last tilt response.')
-                return self.last_reading
-            else:
-                logging.error('No last tilt reading, returning None.')
-                return {
-                    'temperature': None,
-                    'gravity': None,
-                }
-
-
 class TemperatureMCP9808(Sensor):
     def __init__(self, use_celcius=False):
         self._sensor = None
+        self.model = 'MCP9808'
         self.__dict__.update(locals())
         self._init_sensor()
 
     def _init_sensor(self):
-        try:  # Default constructor will use the default I2C address (0x18) and pick a default I2C bus.
-            self._sensor = MCP9808.MCP9808()
-            self._sensor.begin()
+        try:
+            self._sensor = adafruit_mcp9808.MCP9808(board.I2C())
         except Exception as e:
-            logging.error('Failed to initialize MCP9808 ambient temp sensor...\n  %s' % e)
+            logging.error('Failed to initialize %s ambient temp sensor...\n  %s' % (self.model, e))
+
+    def c_to_f(self, c):
+        return c * 9.0 / 5.0 + 32.0
 
     def get_reading(self):
         try:
-            ambient_temp = float(self._sensor.readTempC())
+            ambient_temp = self._sensor.temperature
             if not self.use_celcius:
-                ambient_temp = c_to_f(ambient_temp)
+                ambient_temp = self.c_to_f(ambient_temp)
             return {
                 'temperature': ambient_temp,
             }
         except Exception as e:
-            logging.error('Failed to get MCP9808 ambient temp sensor data...\n  %s' % e)
+            logging.error('Failed to get %s ambient temp sensor data...\n  %s' % (self.model, e))
             return {
                 'temperature': None
             }
+
+class HighSideCurrentINA219(Sensor):
+    def __init__(self, address=None):
+        self._sensor = None
+        self.model = 'INA219'
+        self.address = address
+        self.__dict__.update(locals())
+        self._init_sensor()
+
+    def _init_sensor(self):
+        try: 
+            if self.address:
+                self._sensor = adafruit_ina219.INA219(board.I2C(), addr=self.address)
+            else:
+                self._sensor = adafruit_ina219.INA219(board.I2C())
+        except Exception as e:
+            logging.error('Failed to initialize %s current sensor...\n  %s' % (self.model, e))
+
+    def get_reading(self):
+        try:
+            return {
+                'load_voltage': round(self._sensor.bus_voltage, 6),  # voltage on V- (load side)
+                'shunt_voltage': round(self._sensor.shunt_voltage, 6),  # voltage between V+ and V- across the shunt
+                'load_current': round(self._sensor.current, 6)  # current in mA
+            }
+        except Exception as e:
+            logging.error('Failed to get %s current sensor data...\n  %s' % (self.model, e))
+            return {}
+
+class AmbientLightBH1750(Sensor):
+    def __init__(self):
+        self._sensor = None
+        self.model = 'BH1750'
+        self.__dict__.update(locals())
+        self._init_sensor()
+
+    def _init_sensor(self):
+        try: 
+            self._sensor = adafruit_bh1750.BH1750(board.I2C())
+        except Exception as e:
+            logging.error('Failed to initialize %s lux sensor...\n  %s' % (self.model, e))
+
+    def get_reading(self):
+        try:
+            return {
+                'lux': self._sensor.lux,
+            }
+        except Exception as e:
+            logging.error('Failed to get %s lux sensor data...\n  %s' % (self.model, e))
+            return {}
+
+class UvVEML6070(Sensor):
+    def __init__(self):
+        self._sensor = None
+        self.model = 'VEML6070'
+        self.__dict__.update(locals())
+        self._init_sensor()
+
+    def _init_sensor(self):
+        try: 
+            self._sensor = adafruit_veml6070.VEML6070(board.I2C())
+        except Exception as e:
+            logging.error('Failed to initialize %s UV sensor...\n  %s' % (self.model, e))
+
+    def get_reading(self):
+        try:
+            return {
+                'uv': self._sensor.uv_raw,
+                'uv_index': self._sensor.get_index(self._sensor.uv_raw)
+            }
+        except Exception as e:
+            logging.error('Failed to get %s UV sensor data...\n  %s' % (self.model, e))
+            return {}
+

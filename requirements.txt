@@ -3,3 +3,9 @@ oauth2client
 gspread
 pandas
 pybluez
+
+adafruit-circuitpython-bh1750
+adafruit-circuitpython-ina219
+adafruit-circuitpython-mcp9808
+adafruit-circuitpython-veml6070
+adafruit-blinka
