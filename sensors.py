@@ -40,11 +40,42 @@ class Forcast(Sensor):
             logging.error('Failed to get DarkSky data...\n  %s' % e)
             return {}
 
-class TemperatureMCP9808(Sensor):
-    def __init__(self, use_celcius=False):
+class HighSideCurrentINA219(Sensor):
+    def __init__(self, address=0x44):
         self._sensor = None
-        self.model = 'MCP9808'
+
         self.__dict__.update(locals())
+        self.address = address
+        self.model = 'INA219'
+        self.url = 'https://learn.adafruit.com/adafruit-ina219-current-sensor-breakout/'
+        self._init_sensor()
+
+    def _init_sensor(self):
+        try: 
+            if self.address:
+                self._sensor = adafruit_ina219.INA219(board.I2C(), addr=self.address)
+            else:
+                self._sensor = adafruit_ina219.INA219(board.I2C())
+        except Exception as e:
+            logging.error('Failed to initialize %s current sensor...\n  %s' % (self.model, e))
+
+    def get_reading(self):
+        try:
+            return {
+                'load_voltage': round(self._sensor.bus_voltage, 6),  # voltage on V- (load side)
+                'shunt_voltage': round(self._sensor.shunt_voltage, 6),  # voltage between V+ and V- across the shunt
+                'load_current': round(self._sensor.current, 6)  # current in mA
+            }
+        except Exception as e:
+            logging.error('Failed to get %s current sensor data...\n  %s' % (self.model, e))
+            return {}
+
+class TemperatureMCP9808(Sensor):
+    def __init__(self, use_celcius=False, address=0x18):
+        self._sensor = None
+        self.__dict__.update(locals())
+        self.model = 'MCP9808'
+        self.url = 'https://learn.adafruit.com/adafruit-mcp9808-precision-i2c-temperature-sensor-guide/'
         self._init_sensor()
 
     def _init_sensor(self):
@@ -70,39 +101,12 @@ class TemperatureMCP9808(Sensor):
                 'temperature': None
             }
 
-class HighSideCurrentINA219(Sensor):
-    def __init__(self, address=None):
-        self._sensor = None
-        self.model = 'INA219'
-        self.address = address
-        self.__dict__.update(locals())
-        self._init_sensor()
-
-    def _init_sensor(self):
-        try: 
-            if self.address:
-                self._sensor = adafruit_ina219.INA219(board.I2C(), addr=self.address)
-            else:
-                self._sensor = adafruit_ina219.INA219(board.I2C())
-        except Exception as e:
-            logging.error('Failed to initialize %s current sensor...\n  %s' % (self.model, e))
-
-    def get_reading(self):
-        try:
-            return {
-                'load_voltage': round(self._sensor.bus_voltage, 6),  # voltage on V- (load side)
-                'shunt_voltage': round(self._sensor.shunt_voltage, 6),  # voltage between V+ and V- across the shunt
-                'load_current': round(self._sensor.current, 6)  # current in mA
-            }
-        except Exception as e:
-            logging.error('Failed to get %s current sensor data...\n  %s' % (self.model, e))
-            return {}
-
 class AmbientLightBH1750(Sensor):
-    def __init__(self):
+    def __init__(self, address=0x23):
         self._sensor = None
-        self.model = 'BH1750'
         self.__dict__.update(locals())
+        self.model = 'BH1750'
+        self.url = 'https://learn.adafruit.com/adafruit-bh1750-ambient-light-sensor'
         self._init_sensor()
 
     def _init_sensor(self):
@@ -114,17 +118,18 @@ class AmbientLightBH1750(Sensor):
     def get_reading(self):
         try:
             return {
-                'lux': self._sensor.lux,
+                'lux': round(self._sensor.lux, 6)
             }
         except Exception as e:
             logging.error('Failed to get %s lux sensor data...\n  %s' % (self.model, e))
             return {}
 
 class UvVEML6070(Sensor):
-    def __init__(self):
+    def __init__(self, address=0x18):
         self._sensor = None
-        self.model = 'VEML6070'
         self.__dict__.update(locals())
+        self.model = 'VEML6070'
+        self.url = 'https://learn.adafruit.com/adafruit-veml6070-uv-light-sensor-breakout'
         self._init_sensor()
 
     def _init_sensor(self):

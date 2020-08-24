@@ -3,8 +3,10 @@
 auth/
 old/
 
+
 *.zip
 *.pyc
 *.tsv
+*.csv
 *.swp
 .DS_Store
