@@ -2,49 +2,50 @@ from __future__ import print_function
 
 import argparse
 import time
+import logging
 
 import bluetooth._bluetooth as bluez
 
 import blescan
-
 from sensors import Sensor
 
 TILTS = {
-    'a495bb10c5b14b44b5121370f02d74de': 'Red',
-    'a495bb20c5b14b44b5121370f02d74de': 'Green',
-    'a495bb30c5b14b44b5121370f02d74de': 'Black',
-    'a495bb40c5b14b44b5121370f02d74de': 'Purple',
-    'a495bb50c5b14b44b5121370f02d74de': 'Orange',
-    'a495bb60c5b14b44b5121370f02d74de': 'Blue',
-    'a495bb70c5b14b44b5121370f02d74de': 'Pink'
+    "a495bb10c5b14b44b5121370f02d74de": "Red",
+    "a495bb20c5b14b44b5121370f02d74de": "Green",
+    "a495bb30c5b14b44b5121370f02d74de": "Black",
+    "a495bb40c5b14b44b5121370f02d74de": "Purple",
+    "a495bb50c5b14b44b5121370f02d74de": "Orange",
+    "a495bb60c5b14b44b5121370f02d74de": "Blue",
+    "a495bb70c5b14b44b5121370f02d74de": "Pink",
 }
 
 # TODO: Untested moving thios from sensors.py!!!
-class TiltHydrometerSensor(Sensor):
+class TiltHydrometerSensor:
     def __init__(self, color, use_celcius=False):
-        self.__dict__.update(locals())
+        self.color = color
+        self.use_celcius = use_celcius
         self.last_reading = None
 
     def get_reading(self):
         try:
             tilt_reading = get_tilt(self.color)
             reading = {
-                'temperature': float(tilt_reading.get_temp(celcius=self.use_celcius)),
-                'gravity': float(tilt_reading.get_gravity()),
+                "temperature": float(tilt_reading.get_temp(celcius=self.use_celcius)),
+                "gravity": float(tilt_reading.get_gravity()),
             }
             self.last_reading = reading
             return reading
 
         except Exception as e:
-            logging.error('Failed to get Tilt data...\n  %s' % e)
+            logging.error("Failed to get Tilt data...\n  %s" % e)
             if self.last_reading is not None:
-                logging.info('Returning last tilt response.')
+                logging.info("Returning last tilt response.")
                 return self.last_reading
             else:
-                logging.error('No last tilt reading, returning None.')
+                logging.error("No last tilt reading, returning None.")
                 return {
-                    'temperature': None,
-                    'gravity': None,
+                    "temperature": None,
+                    "gravity": None,
                 }
 
 
@@ -56,7 +57,7 @@ class Tilt:
         self.gravity = gravity
 
     def get_temp(self, celcius=False):
-        t = (celcius and ((float(self.temp) - 32) * 5 / 9) or self.temp)
+        t = celcius and ((float(self.temp) - 32) * 5 / 9) or self.temp
         return t
 
     def get_gravity(self):
@@ -64,10 +65,9 @@ class Tilt:
         return g
 
     def __str__(self, celcius=True):
-        return "UUID: {u} Color: {c} Temp: {t} Gravity {g}".format(u=self.uuid,
-                                                                   c=self.color,
-                                                                   t=self.get_temp(celcius),
-                                                                   g=self.get_gravity())
+        return "UUID: {u} Color: {c} Temp: {t} Gravity {g}".format(
+            u=self.uuid, c=self.color, t=self.get_temp(celcius), g=self.get_gravity()
+        )
 
 
 def get_tilt(color, tries=3):
@@ -91,8 +91,10 @@ def get_tilt(color, tries=3):
     all_tilts = {}
     returnedList = blescan.parse_events(sock, 100)
     for beacon in returnedList:
-        if (beacon['uuid'] in TILTS):
-            this_tilt = Tilt(beacon['uuid'], TILTS[beacon['uuid']], beacon['major'], beacon['minor'])
+        if beacon["uuid"] in TILTS:
+            this_tilt = Tilt(
+                beacon["uuid"], TILTS[beacon["uuid"]], beacon["major"], beacon["minor"]
+            )
             if this_tilt.color.lower() == color.lower():
                 return this_tilt
             else:
@@ -122,7 +124,11 @@ if __name__ == "__main__":
     parser.add_argument("color", help="Color of the tilt you want to check", type=str)
     parser.add_argument("--temp", help="Output temperature only", action="store_true")
     parser.add_argument("--gravity", help="Output gravity only", action="store_true")
-    parser.add_argument("--use_celcius", help="Output as fahrenheit rather than celcius", action='store_true')
+    parser.add_argument(
+        "--use_celcius",
+        help="Output as fahrenheit rather than celcius",
+        action="store_true",
+    )
     args = parser.parse_args()
 
     main(args)
