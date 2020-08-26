@@ -50,9 +50,11 @@ def main(sensor_map, log_conf):
             readings = {}
             for sensor_name, sensor_obj in sensor_map.items():
                 for key, value in sensor_obj.get_reading().items():
-                    if isinstance(value, float):
-                        value = round(value, log_conf["max_precision"])
-                    readings["%s_%s" % (sensor_name, key)] = value
+                    entry_name = "%s_%s" % (sensor_name, key)
+                    if entry_name in log_conf["expected_header"]:
+                        if isinstance(value, float):
+                            value = round(value, log_conf["max_precision"])
+                        readings[entry_name] = value                  
 
             row = []
             for key in log_conf["expected_header"]:
