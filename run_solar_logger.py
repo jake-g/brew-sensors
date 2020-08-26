@@ -20,8 +20,8 @@ SENSOR_MAP = {
     "CLOCK": sensors.Timestamp(timezone=TIMEZONE),
     "FORCAST": sensors.Forcast(DARKSKY_AUTH, GPS_LAT, GPS_LNG),
     "UV": sensors.UvVEML6070(),
-    "ALS": sensors.AmbientLightBH1750(),
-    "TEMP_F": sensors.TemperatureMCP9808(),
+    "LIGHT": sensors.AmbientLightTSL2591(),
+    "AMBIENT": sensors.TemperatureHumidityPressureBME280(),
     "MPTT_IN": sensors.HighSideCurrentINA219(address=CHARGE_I2C_ADDR),
     "MPTT_OUT": sensors.HighSideCurrentINA219(address=LOAD_I2C_ADDR),
 }
@@ -40,6 +40,8 @@ LOG_CONF = {
     "backup_period": 60 * 20,
     # Name of Google Spreadsheet to write to.
     "gsheet_name": "solar-log",
+    # Maximum number of decimal places for entry.
+    "max_precision": 4,
     # Authentication json for GDrive api.
     # see:
     # https://www.twilio.com/blog/2017/02/an-easy-way-to-read-and-write-to-a-google-spreadsheet-in-python.html
@@ -48,10 +50,14 @@ LOG_CONF = {
     # (gsheet, local, ect).
     "expected_header": [
         "CLOCK_time",
-        "ALS_lux",
+        "LIGHT_lux",
+        "LIGHT_infrared",
+        "LIGHT_visible",
         "UV_uv",
         "UV_uv_index",
-        "TEMP_F_temperature",
+        "AMBIENT_temperature_F",
+        "AMBIENT_humidity_%",
+        "AMBIENT_pressure_hPa",
         "MPTT_IN_load_current",
         "MPTT_IN_load_voltage",
         "MPTT_IN_shunt_voltage",

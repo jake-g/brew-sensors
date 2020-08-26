@@ -8,11 +8,13 @@ from loggers import gSheetLogger, TsvLogger
 
 
 def main(sensor_map, log_conf):
+
     # Init Logging
-    logging.basicConfig(level=logging.INFO)
-    if log_conf["debug"]:
+    if log_conf["debug"] == True:
         logging.basicConfig(level=logging.DEBUG)
         logging.debug("Debug logging enabled...")
+    else:
+        logging.basicConfig(level=logging.INFO)
     # Logging to local .tsv file.
     tsv_log = TsvLogger(log_conf["local_logfile"], log_conf["expected_header"])
 
@@ -42,36 +44,34 @@ def main(sensor_map, log_conf):
     # Main Loop
     print("Press Ctrl-C to quit.")
     last_backup = time.time()
-    last_row_dict = {}
+    last_readings = {}
     while True:
         try:
-            sensor_readings = {k: s.get_reading() for k, s in sensor_map.items()}
-            row_dict = {
-                "%s_%s" % (sns, key): value
-                for sns, res in sensor_readings.items()
-                for key, value in res.items()
-            }
-            logging.debug(json.dumps(row_dict, sort_keys=True, indent=2))
+            readings = {}
+            for sensor_name, sensor_obj in sensor_map.items():
+                for key, value in sensor_obj.get_reading().items():
+                    if isinstance(value, float):
+                        value = round(value, log_conf["max_precision"])
+                    readings["%s_%s" % (sensor_name, key)] = value
 
             row = []
             for key in log_conf["expected_header"]:
-                if key in row_dict:
-                    row.append(row_dict[key])
-                elif key in last_row_dict:
+                if key in readings:
+                    row.append(readings[key])
+                elif key in last_readings:
                     logging.warning(
                         "New data entry missing key: %s using last entry..." % key
                     )
-                    row.append(last_row_dict[key])
+                    row.append(last_readings[key])
                 else:
                     logging.warning(
                         "New and previous data entry missing key: %s, setting to None..."
                         % key
                     )
                     row.append("")
-            last_row_dict = row_dict
+            last_readings = readings
 
             # Log new entry
-
             if tsv_log:
                 try:
                     tsv_log.append_row(row)
@@ -89,10 +89,6 @@ def main(sensor_map, log_conf):
             if gsheet.sheet:
                 try:
                     gsheet.sheet.append_row(row)
-                    logging.debug(
-                        "First 5 columns of last 5 entries:\n%s\n"
-                        % gsheet.get_df()[log_conf["expected_header"][0:5]]
-                    )
                 except Exception as e:
                     logging.error(
                         "Failed to append to gsheet: %s...\n%s"
@@ -119,6 +115,8 @@ def main(sensor_map, log_conf):
             if last_backup_elapsed > log_conf["backup_period"]:
                 gsheet.dump_sheet(log_conf["local_backup"])
                 last_backup = time.time()
+
+            logging.debug(json.dumps(readings, sort_keys=True, indent=2))
 
         except Exception as e:
             logging.error("Failed in main loop...\n%s" % e)

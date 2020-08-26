@@ -9,11 +9,18 @@ import adafruit_ina219
 import adafruit_bh1750
 import adafruit_veml6070
 import adafruit_mcp9808
+import adafruit_bme280
+import adafruit_tsl2591
+
+
+def celcius_to_fahrenheit(celcius):
+    return celcius * 9.0 / 5.0 + 32.0
+
 
 class Timestamp:
-    def __init__(self, timezone="US/Pacific" , format="%m-%d-%Y %H:%M"):
-        self.timezone=timezone
-        self.format=format
+    def __init__(self, timezone="US/Pacific", format="%m-%d-%Y %H:%M"):
+        self.timezone = timezone
+        self.format = format
 
     def get_reading(self):
         return {"time": datetime.now(timezone(self.timezone)).strftime(self.format)}
@@ -58,13 +65,9 @@ class HighSideCurrentINA219:
     def get_reading(self):
         try:
             return {
-                "load_voltage": round(
-                    self._sensor.bus_voltage, 6
-                ),  # voltage on V- (load side)
-                "shunt_voltage": round(
-                    self._sensor.shunt_voltage, 6
-                ),  # voltage between V+ and V- across the shunt
-                "load_current": round(self._sensor.current, 6),  # current in mA
+                "load_voltage": self._sensor.bus_voltage,  # voltage on V- (load side)
+                "shunt_voltage": self._sensor.shunt_voltage,  # voltage between V+ and V- across the shunt
+                "load_current": self._sensor.current,  # current in mA
             }
         except Exception as e:
             logging.error(
@@ -78,7 +81,7 @@ class TemperatureMCP9808:
         self.address = address
         self.use_celcius = use_celcius
         self.model = "MCP9808"
-        self.url = "https://learn.adafruit.com/adafruit-mcp9808-precision-i2c-temperature-sensor-guide/"
+        self.url = "https://learn.adafruit.com/adafruit-mcp9808-precision-i2c-temperature-sensor-guide"
         self._init_sensor()
 
     def _init_sensor(self):
@@ -89,20 +92,60 @@ class TemperatureMCP9808:
                 "Failed to initialize %s ambient temp sensor...\n  %s" % (self.model, e)
             )
 
-    def c_to_f(self, c):
-        return c * 9.0 / 5.0 + 32.0
-
     def get_reading(self):
         try:
-            ambient_temp = self._sensor.temperature
-            if not self.use_celcius:
-                ambient_temp = self.c_to_f(ambient_temp)
-            return {
-                "temperature": ambient_temp,
-            }
+            if self.use_celcius:
+                return {
+                    "temperature_C": self._sensor.temperature,
+                }
+            else:
+                return {
+                    "temperature_F": celcius_to_fahrenheit(self._sensor.temperature),
+                }
         except Exception as e:
             logging.error(
                 "Failed to get %s ambient temp sensor data...\n  %s" % (self.model, e)
+            )
+
+
+class TemperatureHumidityPressureBME280:
+    def __init__(self, use_celcius=False, address=0x76):
+        self._sensor = None
+        self.address = address
+        self.use_celcius = use_celcius
+        self.model = "BME280"
+        self.url = "https://learn.adafruit.com/adafruit-bme280-humidity-barometric-pressure-temperature-sensor-breakout"
+        self._init_sensor()
+
+    def _init_sensor(self):
+        try:
+            self._sensor = adafruit_bme280.Adafruit_BME280_I2C(
+                board.I2C(), address=self.address
+            )
+        except Exception as e:
+            logging.error(
+                "Failed to initialize %s temperature/humidity/pressure sensor...\n  %s"
+                % (self.model, e)
+            )
+
+    def get_reading(self):
+        try:
+            if self.use_celcius:
+                return {
+                    "temperature_C": self._sensor.temperature,
+                    "humidity_%": self._sensor.humidity,
+                    "pressure_hPa": self._sensor.pressure,
+                }
+            else:
+                return {
+                    "temperature_F": celcius_to_fahrenheit(self._sensor.temperature),
+                    "humidity_%": self._sensor.humidity,
+                    "pressure_hPa": self._sensor.pressure,
+                }
+        except Exception as e:
+            logging.error(
+                "Failed to get %s temperature/humidity/pressure data...\n  %s"
+                % (self.model, e)
             )
 
 
@@ -124,7 +167,38 @@ class AmbientLightBH1750:
 
     def get_reading(self):
         try:
-            return {"lux": round(self._sensor.lux, 6)}
+            return {"lux": self._sensor.lux}
+        except Exception as e:
+            logging.error("Failed to get %s lux sensor data...\n  %s" % (self.model, e))
+
+
+class AmbientLightTSL2591:
+    def __init__(self, address=0x29, gain=adafruit_tsl2591.GAIN_LOW):
+        self._sensor = None
+        self.address = address
+        self.gain = gain
+        self.model = "TSL2591"
+        self.url = "https://learn.adafruit.com/adafruit-tsl2591"
+        self._init_sensor()
+
+
+    def _init_sensor(self):
+        try:
+            self._sensor = adafruit_tsl2591.TSL2591(board.I2C())
+            self._sensor.gain = self.gain
+
+        except Exception as e:
+            logging.error(
+                "Failed to initialize %s lux sensor...\n  %s" % (self.model, e)
+            )
+
+    def get_reading(self):
+        try:
+            return {
+                "lux": self._sensor.lux,
+                "infrared": self._sensor.infrared,
+                "visible": self._sensor.visible,
+            }
         except Exception as e:
             logging.error("Failed to get %s lux sensor data...\n  %s" % (self.model, e))
 
