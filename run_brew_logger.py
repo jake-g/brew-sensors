@@ -25,12 +25,14 @@ SENSOR_MAP = {
     "tilt": tilt.TiltHydrometerSensor(TILT_COLOR),
     "ambient": sensors.TemperatureMCP9808(),
     "light": sensors.AmbientLightBH1750(),
+    "sun": sensors.UvVEML6070(),
+    
 }
 
 # Configuration for sensor logging.
 LOG_CONF = {
     # Extra stdout logging verbosity for debug purposes
-    "debug": False,
+    "debug": True,
     # Name of local .tsv file for logging session.
     "local_logfile": os.path.join(cwd, "brew-logs/log_%d.tsv" % time.time()),
     # Log data every LOG_PERIOD seconds.
@@ -55,6 +57,8 @@ LOG_CONF = {
         "tilt_temperature_F",
         "ambient_temperature_F",
         "light_lux",
+        "sun_uv",
+        "sun_uv_index",
         "local_temperature",
         "local_humidity",
         "local_pressure",
