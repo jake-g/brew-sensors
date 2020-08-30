@@ -1,3 +1,4 @@
+# Jake add python 3 support 2020
 # BLE iBeaconScanner based on https://github.com/adamf/BLE/blob/master/ble-scanner.py
 # JCS 06/07/14
 
@@ -49,7 +50,8 @@ ADV_SCAN_RSP = 0x04
 def returnnumberpacket(pkt):
     myInteger = 0
     multiple = 256
-    for c in pkt:
+    for i in range(len(pkt)):
+        c = pkt[i:i+1]
         myInteger += struct.unpack("B", c)[0] * multiple
         multiple = 1
     return myInteger
@@ -57,13 +59,15 @@ def returnnumberpacket(pkt):
 
 def returnstringpacket(pkt):
     myString = ""
-    for c in pkt:
+    for i in range(len(pkt)):
+        c = pkt[i:i+1]
         myString += "%02x" % struct.unpack("B", c)[0]
     return myString
 
 
 def printpacket(pkt):
-    for c in pkt:
+    for i in range(len(pkt)):
+        c = pkt[i:i+1]
         sys.stdout.write("%02x " % struct.unpack("B", c)[0])
 
 
@@ -143,13 +147,13 @@ def parse_events(sock, loop_count=100):
         elif event == bluez.EVT_DISCONN_COMPLETE:
             i = 0
         elif event == LE_META_EVENT:
-            subevent, = struct.unpack("B", pkt[3])
+            subevent, = struct.unpack("B", pkt[3:4])
             pkt = pkt[4:]
             if subevent == EVT_LE_CONN_COMPLETE:
                 le_handle_connection_complete(pkt)
             elif subevent == EVT_LE_ADVERTISING_REPORT:
                 # print "advertising report"
-                num_reports = struct.unpack("B", pkt[0])[0]
+                num_reports = struct.unpack("B", pkt[0:1])[0]
                 report_pkt_offset = 0
                 for i in range(0, num_reports):
 
@@ -172,8 +176,8 @@ def parse_events(sock, loop_count=100):
                         'uuid': returnstringpacket(pkt[report_pkt_offset - 22: report_pkt_offset - 6]),
                         'major': "%i" % returnnumberpacket(pkt[report_pkt_offset - 6: report_pkt_offset - 4]),
                         'minor': "%i" % returnnumberpacket(pkt[report_pkt_offset - 4: report_pkt_offset - 2]),
-                        'unknown': "%i" % struct.unpack("b", pkt[report_pkt_offset - 2]),
-                        'rssi': "%i" % struct.unpack("b", pkt[report_pkt_offset - 1])
+                        'unknown': "%i" % struct.unpack("b", pkt[report_pkt_offset - 2:report_pkt_offset - 1]),
+                        'rssi': "%i" % struct.unpack("b", pkt[report_pkt_offset - 1:len(pkt)])
                     }
                     # print "\tAdstring=", Adstring
                     myFullList.append(beacon)

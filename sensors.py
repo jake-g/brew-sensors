@@ -14,7 +14,11 @@ import adafruit_tsl2591
 
 
 def celcius_to_fahrenheit(celcius):
-    return celcius * 9.0 / 5.0 + 32.0
+    return float(celcius) * 9.0 / 5.0 + 32.0
+
+
+def fahrenheit_to_celcius(fahrenheit):
+    return (float(fahrenheit) - 32) * 5 / 9
 
 
 class Timestamp:
@@ -180,7 +184,6 @@ class AmbientLightTSL2591:
         self.model = "TSL2591"
         self.url = "https://learn.adafruit.com/adafruit-tsl2591"
         self._init_sensor()
-
 
     def _init_sensor(self):
         try:

@@ -1,11 +1,12 @@
-
-
+import os
 import time
 
 import sensors
 import tilt
 from runner import main
 
+cwd = os.path.dirname(os.path.realpath(__file__))
+# for service on pi see: /lib/systemd/system/homebrew-sensor-logging.service
 # Local Parameters
 GPS_LAT = 47.677601
 GPS_LNG = 122.369141
@@ -23,6 +24,7 @@ SENSOR_MAP = {
     "local": sensors.Forcast(DARKSKY_AUTH, GPS_LAT, GPS_LNG),
     "tilt": tilt.TiltHydrometerSensor(TILT_COLOR),
     "ambient": sensors.TemperatureMCP9808(),
+    "light": sensors.AmbientLightBH1750(),
 }
 
 # Configuration for sensor logging.
@@ -30,26 +32,29 @@ LOG_CONF = {
     # Extra stdout logging verbosity for debug purposes
     "debug": False,
     # Name of local .tsv file for logging session.
-    "local_logfile": "./brew-logs/log_%d.tsv" % time.time(),
+    "local_logfile": os.path.join(cwd, "brew-logs/log_%d.tsv" % time.time()),
     # Log data every LOG_PERIOD seconds.
     "log_period": 60 * 5,
     # Name of local .tsv file to backup data to.
-    "local_backup": "./brew-logs/gsheet_bkp.tsv",
+    "local_backup": os.path.join(cwd, "brew-logs/gsheet_bkp.tsv"),
     # Backup data locally every LOG_PERIOD seconds.
     "backup_period": 60 * 20,
     # Name of Google Spreadsheet to write to.
     "gsheet_name": "brew-log",
+    # Maximum number of decimal places for entry.
+    "max_precision": 4,
     # Authentication json for GDrive api.
     # see:
     # https://www.twilio.com/blog/2017/02/an-easy-way-to-read-and-write-to-a-google-spreadsheet-in-python.html
-    "gsheet_auth": "./auth/brew-secret.json",
+    "gsheet_auth": os.path.join(cwd, "auth/brew-secret.json"),
     # This is used to validate the logging header matches in all places
     # (gsheet, local, ect).
     "expected_header": [
         "clock_time",
         "tilt_gravity",
-        "tilt_temperature",
-        "ambient_temperature",
+        "tilt_temperature_F",
+        "ambient_temperature_F",
+        "light_lux",
         "local_temperature",
         "local_humidity",
         "local_pressure",

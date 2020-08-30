@@ -5,9 +5,9 @@ import time
 import logging
 
 import bluetooth._bluetooth as bluez
-
 import blescan
-from sensors import Sensor
+
+from sensors import celcius_to_fahrenheit
 
 TILTS = {
     "a495bb10c5b14b44b5121370f02d74de": "Red",
@@ -19,7 +19,7 @@ TILTS = {
     "a495bb70c5b14b44b5121370f02d74de": "Pink",
 }
 
-# TODO: Untested moving thios from sensors.py!!!
+
 class TiltHydrometerSensor:
     def __init__(self, color, use_celcius=False):
         self.color = color
@@ -29,10 +29,16 @@ class TiltHydrometerSensor:
     def get_reading(self):
         try:
             tilt_reading = get_tilt(self.color)
-            reading = {
-                "temperature": float(tilt_reading.get_temp(celcius=self.use_celcius)),
-                "gravity": float(tilt_reading.get_gravity()),
-            }
+            if self.use_celcius:
+                reading = {
+                    "temperature_C": fahrenheit_to_celcius(tilt_reading.get_temp_f()),
+                    "gravity": tilt_reading.get_gravity(),
+                }
+            else:
+                reading = {
+                    "temperature_F": tilt_reading.get_temp_f(),
+                    "gravity": tilt_reading.get_gravity(),
+                }
             self.last_reading = reading
             return reading
 
@@ -43,10 +49,6 @@ class TiltHydrometerSensor:
                 return self.last_reading
             else:
                 logging.error("No last tilt reading, returning None.")
-                return {
-                    "temperature": None,
-                    "gravity": None,
-                }
 
 
 class Tilt:
@@ -56,17 +58,15 @@ class Tilt:
         self.temp = temp
         self.gravity = gravity
 
-    def get_temp(self, celcius=False):
-        t = celcius and ((float(self.temp) - 32) * 5 / 9) or self.temp
-        return t
+    def get_temp_f(self):
+        return float(self.temp)
 
     def get_gravity(self):
-        g = float(self.gravity) / 1000
-        return g
+        return float(self.gravity) / 1000
 
     def __str__(self, celcius=True):
         return "UUID: {u} Color: {c} Temp: {t} Gravity {g}".format(
-            u=self.uuid, c=self.color, t=self.get_temp(celcius), g=self.get_gravity()
+            u=self.uuid, c=self.color, t=self.get_temp_f(), g=self.get_gravity()
         )
 
 
@@ -112,7 +112,7 @@ def main(args):
         print("Found these though: {o}".format(",".join(tilt.keys())))
     if isinstance(tilt, Tilt):
         if args.temp:
-            print(tilt.get_temp(celcius=args.use_celcius))
+            print(tilt.get_temp_f())
         elif args.gravity:
             print(tilt.get_gravity())
         else:

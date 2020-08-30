@@ -48,9 +48,8 @@ class gSheetLogger:
         self._set_header()
 
     def _set_header(self):
-        _header = self.sheet.row_values(1)  # i guess header starts at row 1
-        if _header:
-            self.header = _header
+        if self.sheet and self.sheet.row_values:
+            self.header = self.sheet.row_values(1)
         else:
             logging.warning("Sheet has no header data!")
 

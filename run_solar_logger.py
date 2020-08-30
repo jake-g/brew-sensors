@@ -29,7 +29,7 @@ SENSOR_MAP = {
 # Configuration for sensor logging.
 LOG_CONF = {
     # Extra stdout logging verbosity for debug purposes
-    "debug": True,
+    "debug": False,
     # Name of local .tsv file for logging session.
     "local_logfile": "./solar-logs/log_%d.tsv" % time.time(),
     # Log data every LOG_PERIOD seconds.
