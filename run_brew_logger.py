@@ -7,7 +7,7 @@ from runner import main
 
 # Local Parameters
 GPS_LAT = 47.677601
-GPS_LNG = 122.369141
+GPS_LNG = -122.369141
 TIMEZONE = "US/Pacific"
 
 # Color of the tilt sensor to log

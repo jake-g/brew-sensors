@@ -46,12 +46,12 @@ class Forecast:
             ).currently()
 
             if self.use_celcius:
-                darksky_forecast.d["temperature_C"] = darksky_forecast.d.pop(
-                    "temperature", None
+                darksky_forecast.d["temperature_C"] = fahrenheit_to_celcius(
+                    darksky_forecast.d.pop("temperature", None)
                 )
             else:
-                darksky_forecast.d["temperature_F"] = celcius_to_fahrenheit(
-                    darksky_forecast.d.pop("temperature", None)
+                darksky_forecast.d["temperature_F"] = darksky_forecast.d.pop(
+                    "temperature", None
                 )
             return darksky_forecast.d
         except Exception as e:
