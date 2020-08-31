@@ -1,4 +1,3 @@
-#!/usr/bin/python
 from __future__ import print_function
 
 import gspread
@@ -39,7 +38,7 @@ class gSheetLogger:
     def _get_sheet(self):
         try:
             self.sheet = self.client.open(self.name).get_worksheet(self.sheet_idx)
-            logging.debug("Sheet Values:\n%s" % self.sheet.get_all_values())
+            logging.debug("Sheet has %d rows" % len(self.sheet.get_all_values()))
         except Exception as e:
             logging.error(
                 "%s\nEnsure files are shared with this email:\n\n  %s"

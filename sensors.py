@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime
-
+import os
+import time
 import forecastio
 from pytz import timezone
 
@@ -30,19 +31,29 @@ class Timestamp:
         return {"time": datetime.now(timezone(self.timezone)).strftime(self.format)}
 
 
-class Forcast:
-    def __init__(self, api_key, lat, lng):
+class Forecast:
+    def __init__(self, api_key, lat, lng, use_celcius=False):
         self.lat = lat
         self.lng = lng
         self.api_key = api_key
+        self.use_celcius = use_celcius
         self.last_reading = None
 
     def get_reading(self):
         try:
-            darksky_forcast = forecastio.load_forecast(
+            darksky_forecast = forecastio.load_forecast(
                 self.api_key, self.lat, self.lng
             ).currently()
-            return darksky_forcast.d
+
+            if self.use_celcius:
+                darksky_forecast.d["temperature_C"] = darksky_forecast.d.pop(
+                    "temperature", None
+                )
+            else:
+                darksky_forecast.d["temperature_F"] = celcius_to_fahrenheit(
+                    darksky_forecast.d.pop("temperature", None)
+                )
+            return darksky_forecast.d
         except Exception as e:
             logging.error("Failed to get DarkSky data...\n  %s" % e)
 
@@ -77,6 +88,55 @@ class HighSideCurrentINA219:
             logging.error(
                 "Failed to get %s current sensor data...\n  %s" % (self.model, e)
             )
+
+
+class PiSensors:
+    # TODO get  Wifi strength
+    def __init__(self, use_celcius=False):
+        self.use_celcius = use_celcius
+        self.model = "RaspberryPi"
+
+    def get_cpu_temperature_c(self):
+        res = os.popen("vcgencmd measure_temp").readline()
+        return float(res.replace("temp=", "").replace("'C\n", ""))
+
+    def get_ram_usage_percent(self):
+        p = os.popen("free")
+        i = 0
+        while 1:
+            i = i + 1
+            line = p.readline()
+            if i == 2:
+                # line = [total RAM, used RAM, free RAM]
+                values = [int(t) for t in line.strip().split()[1:]]
+                return int(100 * values[1] / values[0])
+
+    def get_disk_usage_percent(self):
+        p = os.popen("df -h /")
+        i = 0
+        while 1:
+            i = i + 1
+            line = p.readline()
+            if i == 2:
+                # line = [total disk space, used disk space, remaining disk space, percentage of disk used ]
+                return int(line.split()[4].replace("%", ""))
+
+    def get_reading(self):
+        try:
+            reading = {
+                "disk_usage_%": self.get_disk_usage_percent(),
+                "ram_usage_%": self.get_ram_usage_percent(),
+            }
+            if self.use_celcius:
+                reading["cpu_temperature_C"] = self.get_cpu_temperature_c()
+            else:
+                reading["cpu_temperature_F"] = celcius_to_fahrenheit(
+                    self.get_cpu_temperature_c()
+                )
+            return reading
+
+        except Exception as e:
+            logging.error("Failed to get %s sensor data...\n  %s" % (self.model, e))
 
 
 class TemperatureMCP9808:

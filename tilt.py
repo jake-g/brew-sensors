@@ -21,14 +21,32 @@ TILTS = {
 
 
 class TiltHydrometerSensor:
-    def __init__(self, color, use_celcius=False):
+    def __init__(self, color, sg=None, use_celcius=False):
         self.color = color
         self.use_celcius = use_celcius
+        self.starting_gravity = sg
         self.last_reading = None
+
+    def try_to_get_tile_data(self):
+        tilt_reading = get_tilt(self.color)
+        logging.debug(tilt_reading)
+        if not tilt_reading:
+            logging.warning("Trying to connect to Tilt again in 5 seconds...")
+            time.sleep(5)
+            tilt_reading = get_tilt(self.color)
+            if not tilt_reading:
+                logging.warning("Trying to connect to Tilt again in 10 seconds...")
+                time.sleep(10)
+                tilt_reading = get_tilt(self.color)
+                if not tilt_reading:
+                    logging.warning("Trying to connect to Tilt again in 15 seconds...")
+                    time.sleep(15)
+                    tilt_reading = get_tilt(self.color)
+        return tilt_reading
 
     def get_reading(self):
         try:
-            tilt_reading = get_tilt(self.color)
+            tilt_reading = self.try_to_get_tile_data()
             if self.use_celcius:
                 reading = {
                     "temperature_C": fahrenheit_to_celcius(tilt_reading.get_temp_f()),
@@ -39,6 +57,10 @@ class TiltHydrometerSensor:
                     "temperature_F": tilt_reading.get_temp_f(),
                     "gravity": tilt_reading.get_gravity(),
                 }
+            if self.starting_gravity > 0:
+                reading["alcohol_%"] = 132.25 * (
+                    self.starting_gravity - tilt_reading.get_gravity()
+                )
             self.last_reading = reading
             return reading
 

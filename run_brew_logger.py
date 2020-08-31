@@ -14,6 +14,7 @@ TIMEZONE = "US/Pacific"
 
 # Color of the tilt sensor to log
 TILT_COLOR = "black"
+STARTING_GRAVITY = 1.058
 
 # Darksyk API Auth token.
 DARKSKY_AUTH = "d0693663c82510afb4d62edcc8355980"
@@ -21,18 +22,18 @@ DARKSKY_AUTH = "d0693663c82510afb4d62edcc8355980"
 # Dictionary mapping sensor name to sensor objects to be logged
 SENSOR_MAP = {
     "clock": sensors.Timestamp(timezone=TIMEZONE),
-    "local": sensors.Forcast(DARKSKY_AUTH, GPS_LAT, GPS_LNG),
-    "tilt": tilt.TiltHydrometerSensor(TILT_COLOR),
+    "forecast": sensors.Forecast(DARKSKY_AUTH, GPS_LAT, GPS_LNG),
+    "tilt": tilt.TiltHydrometerSensor(TILT_COLOR, sg=STARTING_GRAVITY),
+    "pi": sensors.PiSensors(),
     "ambient": sensors.TemperatureMCP9808(),
     "light": sensors.AmbientLightBH1750(),
     "sun": sensors.UvVEML6070(),
-    
 }
 
 # Configuration for sensor logging.
 LOG_CONF = {
     # Extra stdout logging verbosity for debug purposes
-    "debug": True,
+    "debug": False,
     # Name of local .tsv file for logging session.
     "local_logfile": os.path.join(cwd, "brew-logs/log_%d.tsv" % time.time()),
     # Log data every LOG_PERIOD seconds.
@@ -54,30 +55,33 @@ LOG_CONF = {
     "expected_header": [
         "clock_time",
         "tilt_gravity",
+        "tilt_alcohol_%",
         "tilt_temperature_F",
         "ambient_temperature_F",
         "light_lux",
         "sun_uv",
-        "sun_uv_index",
-        "local_temperature",
-        "local_humidity",
-        "local_pressure",
-        "local_apparentTemperature",
-        "local_cloudCover",
-        "local_dewPoint",
-        "local_icon",
-        "local_nearestStormBearing",
-        "local_nearestStormDistance",
-        "local_ozone",
-        "local_precipIntensity",
-        "local_precipProbability",
-        "local_summary",
-        "local_time",
-        "local_uvIndex",
-        "local_visibility",
-        "local_windBearing",
-        "local_windGust",
-        "local_windSpeed",
+        "pi_ram_usage_%",
+        "pi_disk_usage_%",
+        "pi_cpu_temperature_F",
+        "forecast_temperature_F",
+        "forecast_humidity",
+        "forecast_pressure",
+        "forecast_apparentTemperature",
+        "forecast_cloudCover",
+        "forecast_dewPoint",
+        "forecast_icon",
+        "forecast_nearestStormBearing",
+        "forecast_nearestStormDistance",
+        "forecast_ozone",
+        "forecast_precipIntensity",
+        "forecast_precipProbability",
+        "forecast_summary",
+        "forecast_time",
+        "forecast_uvIndex",
+        "forecast_visibility",
+        "forecast_windBearing",
+        "forecast_windGust",
+        "forecast_windSpeed",
     ],
 }
 
