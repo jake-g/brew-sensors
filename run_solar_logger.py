@@ -1,3 +1,4 @@
+import os
 import time
 
 import sensors
@@ -19,6 +20,7 @@ DARKSKY_AUTH = "d0693663c82510afb4d62edcc8355980"
 SENSOR_MAP = {
     "CLOCK": sensors.Timestamp(timezone=TIMEZONE),
     "FORECAST": sensors.Forecast(DARKSKY_AUTH, GPS_LAT, GPS_LNG),
+    "PI": sensors.PiSensors(),
     "UV": sensors.UvVEML6070(),
     "LIGHT": sensors.AmbientLightTSL2591(),
     "AMBIENT": sensors.TemperatureHumidityPressureBME280(),
@@ -26,16 +28,18 @@ SENSOR_MAP = {
     "MPTT_OUT": sensors.HighSideCurrentINA219(address=LOAD_I2C_ADDR),
 }
 
+
 # Configuration for sensor logging.
+cwd = os.path.dirname(os.path.realpath(__file__))
 LOG_CONF = {
     # Extra stdout logging verbosity for debug purposes
     "debug": False,
     # Name of local .tsv file for logging session.
-    "local_logfile": "./solar-logs/log_%d.tsv" % time.time(),
+    "local_logfile": os.path.join(cwd, "solar-logs/log_%d.tsv" % time.time()),
     # Log data every LOG_PERIOD seconds.
     "log_period": 60 * 5,
     # Name of local .tsv file to backup data to.
-    "local_backup": "./solar-logs/gsheet_bkp.tsv",
+    "local_backup": os.path.join(cwd, "solar-logs/gsheet_bkp.tsv"),
     # Backup data locally every LOG_PERIOD seconds.
     "backup_period": 60 * 20,
     # Name of Google Spreadsheet to write to.
@@ -45,7 +49,7 @@ LOG_CONF = {
     # Authentication json for GDrive api.
     # see:
     # https://www.twilio.com/blog/2017/02/an-easy-way-to-read-and-write-to-a-google-spreadsheet-in-python.html
-    "gsheet_auth": "./auth/solar-secret.json",
+    "gsheet_auth": os.path.join(cwd, "auth/solar-secret.json"),
     # This is used to validate the logging header matches in all places
     # (gsheet, local, ect).
     "expected_header": [
@@ -64,7 +68,10 @@ LOG_CONF = {
         "MPTT_OUT_load_current",
         "MPTT_OUT_load_voltage",
         "MPTT_OUT_shunt_voltage",
-        "FORECAST_temperature",
+        "PI_ram_usage_%",
+        "PI_disk_usage_%",
+        "PI_cpu_temperature_F",
+        "FORECAST_temperature_F",
         "FORECAST_humidity",
         "FORECAST_pressure",
         "FORECAST_apparentTemperature",

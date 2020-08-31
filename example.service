@@ -1,3 +1,11 @@
+# Example Service:
+# sudo cp example.service /lib/systemd/system/
+# sudo chmod 644 /lib/systemd/system/example.service
+# sudo systemctl daemon-reload
+# sudo systemctl enable sample.service
+# Test: sudo systemctl restart example.service && journalctl -f -u example.service
+
+
  [Unit]
  Description=Logs sensors
  After=multi-user.target

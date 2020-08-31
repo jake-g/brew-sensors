@@ -5,8 +5,6 @@ import sensors
 import tilt
 from runner import main
 
-cwd = os.path.dirname(os.path.realpath(__file__))
-# for service on pi see: /lib/systemd/system/homebrew-sensor-logging.service
 # Local Parameters
 GPS_LAT = 47.677601
 GPS_LNG = 122.369141
@@ -31,6 +29,7 @@ SENSOR_MAP = {
 }
 
 # Configuration for sensor logging.
+cwd = os.path.dirname(os.path.realpath(__file__))
 LOG_CONF = {
     # Extra stdout logging verbosity for debug purposes
     "debug": False,
