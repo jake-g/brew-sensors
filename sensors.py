@@ -19,7 +19,7 @@ def celcius_to_fahrenheit(celcius):
 
 
 def fahrenheit_to_celcius(fahrenheit):
-    return (float(fahrenheit) - 32) * 5 / 9
+    return (float(fahrenheit) - 32.0) * 5.0 / 9.0
 
 
 class Timestamp:
