@@ -12,9 +12,9 @@ TIMEZONE = "US/Pacific"
 
 # Color of the tilt sensor to log
 TILT_COLOR = "black"
-STARTING_GRAVITY = 1.058
+STARTING_GRAVITY = 1.00
 
-# Darksyk API Auth token.
+# Darksky API Auth token.
 DARKSKY_AUTH = "d0693663c82510afb4d62edcc8355980"
 
 # Dictionary mapping sensor name to sensor objects to be logged
@@ -22,27 +22,25 @@ SENSOR_MAP = {
     "clock": sensors.Timestamp(timezone=TIMEZONE),
     "forecast": sensors.Forecast(DARKSKY_AUTH, GPS_LAT, GPS_LNG),
     "beer": tilt.TiltHydrometerSensor(TILT_COLOR, sg=STARTING_GRAVITY),
+    "ambient": sensors.TemperatureHumidityPressureBME280(),
     "pi": sensors.PiSensors(),
-    "ambient": sensors.TemperatureMCP9808(),
-    "light": sensors.AmbientLightBH1750(),
-    "sun": sensors.UvVEML6070(),
 }
 
 # Configuration for sensor logging.
 cwd = os.path.dirname(os.path.realpath(__file__))
 LOG_CONF = {
     # Extra stdout logging verbosity for debug purposes
-    "debug": False,
+    "debug": True,
     # Name of local .tsv file for logging session.
-    "local_logfile": os.path.join(cwd, "brew-logs/log_%d.tsv" % time.time()),
+    "local_logfile": os.path.join(cwd, "homebrew-logs/log_%d.tsv" % time.time()),
     # Log data every LOG_PERIOD seconds.
     "log_period": 60 * 5,
     # Name of local .tsv file to backup data to.
-    "local_backup": os.path.join(cwd, "brew-logs/gsheet_bkp.tsv"),
+    "local_backup": os.path.join(cwd, "homebrew-logs/gsheet_bkp.tsv"),
     # Backup data locally every LOG_PERIOD seconds.
     "backup_period": 60 * 20,
     # Name of Google Spreadsheet to write to.
-    "gsheet_name": "brew-log",
+    "gsheet_name": "homebrew-log",
     # Maximum number of decimal places for entry.
     "max_precision": 4,
     # Authentication json for GDrive api.
@@ -57,8 +55,8 @@ LOG_CONF = {
         "beer_alcohol_%",
         "beer_temperature_F",
         "ambient_temperature_F",
-        "light_lux",
-        "sun_uv",
+        "ambient_humidity_%",
+        "ambient_pressure_hPa",
         "pi_ram_usage_%",
         "pi_disk_usage_%",
         "pi_cpu_temperature_F",
