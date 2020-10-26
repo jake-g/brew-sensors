@@ -1,0 +1,23 @@
+# Example Service:
+# sudo cp example.service /lib/systemd/system/
+# sudo chmod 644 /lib/systemd/system/example.service
+# sudo systemctl daemon-reload
+# sudo systemctl enable example.service
+# Test: sudo systemctl restart example.service && journalctl -f -u example.service
+
+
+ [Unit]
+ Description=Logs sensors
+ Requisite=dietpi-postboot.service
+ After=dietpi-postboot.service
+
+ [Service]
+ Type=idle
+ User=root
+ Group=dietpi
+ SyslogIdentifier=brew-logger 
+ ExecStart=/usr/bin/python3 /home/dietpi/sensors/run_brew_logger.py
+ Restart=Always
+
+ [Install]
+ WantedBy=multi-user.target
