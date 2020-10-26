@@ -21,8 +21,11 @@ DARKSKY_AUTH = "d0693663c82510afb4d62edcc8355980"
 SENSOR_MAP = {
     "clock": sensors.Timestamp(timezone=TIMEZONE),
     "forecast": sensors.Forecast(DARKSKY_AUTH, GPS_LAT, GPS_LNG),
-    "beer": tilt.TiltHydrometerSensor(TILT_COLOR, sg=STARTING_GRAVITY),
-    "ambient": sensors.TemperatureHumidityPressureBME280(),
+    # "beer": tilt.TiltHydrometerSensor(TILT_COLOR, sg=STARTING_GRAVITY),
+    # "ambient": sensors.TemperatureHumidityPressureBME280(),
+    "ambient": sensors.TemperatureMCP9808(),
+    "light": sensors.AmbientLightBH1750(),
+    "uv": sensors.UvVEML6070(),
     "pi": sensors.PiSensors(),
 }
 
@@ -51,12 +54,15 @@ LOG_CONF = {
     # (gsheet, local, ect).
     "expected_header": [
         "clock_time",
-        "beer_gravity",
-        "beer_alcohol_%",
-        "beer_temperature_F",
+        # "beer_gravity",
+        # "beer_alcohol_%",
+        # "beer_temperature_F",
         "ambient_temperature_F",
-        "ambient_humidity_%",
-        "ambient_pressure_hPa",
+        # "ambient_humidity_%",
+        # "ambient_pressure_hPa",
+        "light_lux",
+        "uv_uv",
+        "uv_index",
         "pi_ram_usage_%",
         "pi_disk_usage_%",
         "pi_cpu_temperature_F",
