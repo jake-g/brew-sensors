@@ -61,8 +61,12 @@ class gSheetLogger:
         return pandas.DataFrame(self.sheet.get_all_records(), columns=self.header)
 
     def dump_sheet(self, filename, sep="\t"):
-        logging.debug("Dumping sheet to %s..." % filename)
-        self.get_df().to_csv(filename, sep=sep, header=True)
+        try:
+            logging.debug("Dumping sheet to %s..." % filename)
+            self.get_df().to_csv(filename, sep=sep, header=True)
+        except Exception as e:
+            logging.error("Failed to dump gsheet to csv with filename: %s...\n%s" % (filename, e))
+
 
     def init_header(self, header):
         try:
