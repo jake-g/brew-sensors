@@ -7,6 +7,7 @@ from pytz import timezone
 
 import board
 import adafruit_ina219
+import adafruit_ina260
 import adafruit_bh1750
 import adafruit_veml6070
 import adafruit_mcp9808
@@ -80,15 +81,46 @@ class HighSideCurrentINA219:
     def get_reading(self):
         try:
             return {
-                "load_voltage": self._sensor.bus_voltage,  # voltage on V- (load side)
+                "voltage": self._sensor.bus_voltage,  # voltage on V- (load side)
+                "current": self._sensor.current,  # current in mA
                 "shunt_voltage": self._sensor.shunt_voltage,  # voltage between V+ and V- across the shunt
-                "load_current": self._sensor.current,  # current in mA
             }
         except Exception as e:
             logging.error(
                 "Failed to get %s current sensor data...\n  %s" % (self.model, e)
             )
 
+class HighSideCurrentINA260:
+    def __init__(self, address=0x44):
+        self._sensor = None
+        self.address = address
+        self.model = "INA260"
+        self.url = "https://learn.adafruit.com/adafruit-ina260-current-voltage-power-sensor-breakout/"
+        self._init_sensor()
+
+    def _init_sensor(self):
+        try:
+            if self.address:
+                self._sensor = adafruit_ina260.INA260(board.I2C(), address=self.address)
+            else:
+                self._sensor = adafruit_ina260.INA260(board.I2C())
+        except Exception as e:
+            logging.error(
+                "Failed to initialize %s current sensor...\n  %s" % (self.model, e)
+            )
+
+    def get_reading(self):
+        try:
+            print('Shunt: %s\t%0.2f V\t%0.2f mA\t%0.2f W'% (hex(self.address), self._sensor.voltage, self._sensor.current, self._sensor.power/1000.0))
+            return {
+                "voltage": self._sensor.voltage,  # voltage on V- (load side)
+                "current": self._sensor.current,  # current in mA
+                "power": self._sensor.power,
+            }
+        except Exception as e:
+            logging.error(
+                "Failed to get %s current sensor data...\n  %s" % (self.model, e)
+            )
 
 class PiSensors:
     # TODO get  Wifi strength

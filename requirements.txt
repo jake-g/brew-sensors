@@ -7,6 +7,7 @@ pybluez
 adafruit-blinka
 adafruit-circuitpython-bh1750
 adafruit-circuitpython-ina219
+adafruit-circuitpython-ina260
 adafruit-circuitpython-mcp9808
 adafruit-circuitpython-veml6070
 adafruit-circuitpython-bme280
