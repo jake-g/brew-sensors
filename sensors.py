@@ -46,26 +46,27 @@ class Forecast:
         try:
             last_reading_delta = time.time() - self.last_reading_timestamp
             if last_reading_delta > self.rate_limit_seconds:
-                darksky_forecast = forecastio.load_forecast(
+                res = forecastio.load_forecast(
                     self.api_key, self.lat, self.lng
                 ).currently()
-                self.last_reading = darksky_forecast
+                darksky_forecast = res.d
+                self.last_reading = darksky_forecast.copy()
                 self.last_reading_timestamp = time.time()
             else:
                 logging.warning(
                     "Last reading was %ds ago which is less than the rate limit period of %ds, reusing last result..." % (last_reading_delta, self.rate_limit_seconds)
                 )
-                darksky_forecast = self.last_reading
+                darksky_forecast = self.last_reading.copy()
             
             if self.use_celcius:
-                darksky_forecast.d["temperature_C"] = fahrenheit_to_celcius(
-                    darksky_forecast.d.pop("temperature", None)
+                darksky_forecast["temperature_C"] = fahrenheit_to_celcius(
+                    darksky_forecast.pop("temperature", None)
                 )
             else:
-                darksky_forecast.d["temperature_F"] = darksky_forecast.d.pop(
+                darksky_forecast["temperature_F"] = darksky_forecast.pop(
                     "temperature", None
                 )
-            return darksky_forecast.d
+            return darksky_forecast
         except Exception as e:
             logging.error("Failed to get DarkSky data...\n  %s" % e)
 
