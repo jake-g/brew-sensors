@@ -33,19 +33,30 @@ class Timestamp:
 
 
 class Forecast:
-    def __init__(self, api_key, lat, lng, use_celcius=False):
+    def __init__(self, api_key, lat, lng, use_celcius=False, rate_limit_seconds=180):
         self.lat = lat
         self.lng = lng
         self.api_key = api_key
         self.use_celcius = use_celcius
         self.last_reading = None
+        self.last_reading_timestamp = 0
+        self.rate_limit_seconds = rate_limit_seconds
 
     def get_reading(self):
         try:
-            darksky_forecast = forecastio.load_forecast(
-                self.api_key, self.lat, self.lng
-            ).currently()
-
+            last_reading_delta = time.time() - self.last_reading_timestamp
+            if last_reading_delta > self.rate_limit_seconds:
+                darksky_forecast = forecastio.load_forecast(
+                    self.api_key, self.lat, self.lng
+                ).currently()
+                self.last_reading = darksky_forecast
+                self.last_reading_timestamp = time.time()
+            else:
+                logging.warning(
+                    "Last reading was %ds ago which is less than the rate limit period of %ds, reusing last result..." % (last_reading_delta, self.rate_limit_seconds)
+                )
+                darksky_forecast = self.last_reading
+            
             if self.use_celcius:
                 darksky_forecast.d["temperature_C"] = fahrenheit_to_celcius(
                     darksky_forecast.d.pop("temperature", None)
@@ -111,7 +122,7 @@ class HighSideCurrentINA260:
 
     def get_reading(self):
         try:
-            print('Shunt: %s\t%0.2f V\t%0.2f mA\t%0.2f W'% (hex(self.address), self._sensor.voltage, self._sensor.current, self._sensor.power/1000.0))
+            #print('Shunt: %s\t%0.2f V\t%0.2f mA\t%0.2f W'% (hex(self.address), self._sensor.voltage, self._sensor.current, self._sensor.power/1000.0))
             return {
                 "voltage": self._sensor.voltage,  # voltage on V- (load side)
                 "current": self._sensor.current,  # current in mA
