@@ -9,4 +9,7 @@ old/
 *.tsv
 *.csv
 *.swp
+*.sync-conflict*
+
+.stignore
 .DS_Store
