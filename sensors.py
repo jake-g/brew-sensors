@@ -247,7 +247,7 @@ class TemperatureHumidityPressureBME280:
             else:
                 return {
                     "temperature_F": celcius_to_fahrenheit(self._sensor.temperature),
-                    "humidity_%": self._sensor.humidity,
+                    "humidity_%": self._sensor.humidity / 100.0,
                     "pressure_hPa": self._sensor.pressure,
                 }
         except Exception as e:
