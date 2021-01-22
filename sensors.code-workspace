@@ -1,0 +1,18 @@
+{
+	"folders": [
+		{
+			"name": "SSH FS - brew-monitor",
+			"uri": "ssh://brew-monitor/"
+		},
+		{
+			"path": "../dietpi_homebrew_setup"
+		},
+		{
+			"path": "."
+		},
+		{
+			"path": "../../solar-monitor"
+		}
+	],
+	"settings": {}
+}
