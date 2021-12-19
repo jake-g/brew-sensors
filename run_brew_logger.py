@@ -5,6 +5,8 @@ import sensors
 import tilt
 from runner import main
 
+BEER_NAME = "session behem"
+
 # Local Parameters
 GPS_LAT = 47.677601
 GPS_LNG = -122.369141
@@ -12,7 +14,7 @@ TIMEZONE = "US/Pacific"
 
 # Color of the tilt sensor to log
 TILT_COLOR = "black"
-STARTING_GRAVITY = 1.00
+STARTING_GRAVITY = 1.045
 
 # Darksky API Auth token.
 DARKSKY_AUTH = "d0693663c82510afb4d62edcc8355980"
@@ -23,8 +25,13 @@ SENSOR_MAP = {
     "forecast": sensors.Forecast(DARKSKY_AUTH, GPS_LAT, GPS_LNG),
     "beer": tilt.TiltHydrometerSensor(TILT_COLOR, sg=STARTING_GRAVITY),
     "ambient": sensors.TemperatureHumidityPressureBME280(),
+    # "ambient": sensors.TemperatureMCP9808(),
+    # "light": sensors.AmbientLightBH1750(),
+    # "uv": sensors.UvVEML6070(),
     "pi": sensors.PiSensors(),
 }
+print('brewin %s with SG: %0.2f' % (BEER_NAME, STARTING_GRAVITY))
+print('logging sensors: %s' % sorted(SENSOR_MAP.keys()))
 
 # Configuration for sensor logging.
 cwd = os.path.dirname(os.path.realpath(__file__))
@@ -32,15 +39,15 @@ LOG_CONF = {
     # Extra stdout logging verbosity for debug purposes
     "debug": True,
     # Name of local .tsv file for logging session.
-    "local_logfile": os.path.join(cwd, "homebrew-logs/log_%d.tsv" % time.time()),
+    "local_logfile": os.path.join(cwd, "brew-logs/log_%d.tsv" % time.time()),
     # Log data every LOG_PERIOD seconds.
     "log_period": 60 * 5,
     # Name of local .tsv file to backup data to.
-    "local_backup": os.path.join(cwd, "homebrew-logs/gsheet_bkp.tsv"),
+    "local_backup": os.path.join(cwd, "brew-logs/gsheet_bkp.tsv"),
     # Backup data locally every LOG_PERIOD seconds.
     "backup_period": 60 * 20,
     # Name of Google Spreadsheet to write to.
-    "gsheet_name": "homebrew-log",
+    "gsheet_name": "brew-log",
     # Maximum number of decimal places for entry.
     "max_precision": 4,
     # Authentication json for GDrive api.
@@ -57,6 +64,9 @@ LOG_CONF = {
         "ambient_temperature_F",
         "ambient_humidity_%",
         "ambient_pressure_hPa",
+        # "light_lux",
+        # "uv_uv",
+        # "uv_index",
         "pi_ram_usage_%",
         "pi_disk_usage_%",
         "pi_cpu_temperature_F",
