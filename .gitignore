@@ -10,6 +10,7 @@ old/
 *.csv
 *.swp
 *.sync-conflict*
+*.st*
+*.code-workspace
 .st*
-.stignore
 .DS_Store

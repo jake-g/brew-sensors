@@ -5,6 +5,8 @@ import sensors
 import tilt
 from runner import main
 
+BEER_NAME = "session behem"
+
 # Local Parameters
 GPS_LAT = 47.677601
 GPS_LNG = -122.369141
@@ -28,6 +30,8 @@ SENSOR_MAP = {
     # "uv": sensors.UvVEML6070(),
     "pi": sensors.PiSensors(),
 }
+print('brewin %s with SG: %0.2f' % (BEER_NAME, STARTING_GRAVITY))
+print('logging sensors: %s' % sorted(SENSOR_MAP.keys()))
 
 # Configuration for sensor logging.
 cwd = os.path.dirname(os.path.realpath(__file__))
