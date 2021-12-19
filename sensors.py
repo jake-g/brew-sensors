@@ -7,6 +7,7 @@ from pytz import timezone
 
 import board
 import adafruit_ina219
+import adafruit_ina260
 import adafruit_bh1750
 import adafruit_veml6070
 import adafruit_mcp9808
@@ -32,28 +33,40 @@ class Timestamp:
 
 
 class Forecast:
-    def __init__(self, api_key, lat, lng, use_celcius=False):
+    def __init__(self, api_key, lat, lng, use_celcius=False, rate_limit_seconds=180):
         self.lat = lat
         self.lng = lng
         self.api_key = api_key
         self.use_celcius = use_celcius
         self.last_reading = None
+        self.last_reading_timestamp = 0
+        self.rate_limit_seconds = rate_limit_seconds
 
     def get_reading(self):
         try:
-            darksky_forecast = forecastio.load_forecast(
-                self.api_key, self.lat, self.lng
-            ).currently()
-
+            last_reading_delta = time.time() - self.last_reading_timestamp
+            if last_reading_delta > self.rate_limit_seconds:
+                res = forecastio.load_forecast(
+                    self.api_key, self.lat, self.lng
+                ).currently()
+                darksky_forecast = res.d
+                self.last_reading = darksky_forecast.copy()
+                self.last_reading_timestamp = time.time()
+            else:
+                logging.warning(
+                    "Last reading was %ds ago which is less than the rate limit period of %ds, reusing last result..." % (last_reading_delta, self.rate_limit_seconds)
+                )
+                darksky_forecast = self.last_reading.copy()
+            
             if self.use_celcius:
-                darksky_forecast.d["temperature_C"] = fahrenheit_to_celcius(
-                    darksky_forecast.d.pop("temperature", None)
+                darksky_forecast["temperature_C"] = fahrenheit_to_celcius(
+                    darksky_forecast.pop("temperature", None)
                 )
             else:
-                darksky_forecast.d["temperature_F"] = darksky_forecast.d.pop(
+                darksky_forecast["temperature_F"] = darksky_forecast.pop(
                     "temperature", None
                 )
-            return darksky_forecast.d
+            return darksky_forecast
         except Exception as e:
             logging.error("Failed to get DarkSky data...\n  %s" % e)
 
@@ -80,15 +93,46 @@ class HighSideCurrentINA219:
     def get_reading(self):
         try:
             return {
-                "load_voltage": self._sensor.bus_voltage,  # voltage on V- (load side)
+                "voltage": self._sensor.bus_voltage,  # voltage on V- (load side)
+                "current": self._sensor.current,  # current in mA
                 "shunt_voltage": self._sensor.shunt_voltage,  # voltage between V+ and V- across the shunt
-                "load_current": self._sensor.current,  # current in mA
             }
         except Exception as e:
             logging.error(
                 "Failed to get %s current sensor data...\n  %s" % (self.model, e)
             )
 
+class HighSideCurrentINA260:
+    def __init__(self, address=0x44):
+        self._sensor = None
+        self.address = address
+        self.model = "INA260"
+        self.url = "https://learn.adafruit.com/adafruit-ina260-current-voltage-power-sensor-breakout/"
+        self._init_sensor()
+
+    def _init_sensor(self):
+        try:
+            if self.address:
+                self._sensor = adafruit_ina260.INA260(board.I2C(), address=self.address)
+            else:
+                self._sensor = adafruit_ina260.INA260(board.I2C())
+        except Exception as e:
+            logging.error(
+                "Failed to initialize %s current sensor...\n  %s" % (self.model, e)
+            )
+
+    def get_reading(self):
+        try:
+            #print('Shunt: %s\t%0.2f V\t%0.2f mA\t%0.2f W'% (hex(self.address), self._sensor.voltage, self._sensor.current, self._sensor.power/1000.0))
+            return {
+                "voltage": self._sensor.voltage,  # voltage on V- (load side)
+                "current": self._sensor.current,  # current in mA
+                "power": self._sensor.power,
+            }
+        except Exception as e:
+            logging.error(
+                "Failed to get %s current sensor data...\n  %s" % (self.model, e)
+            )
 
 class PiSensors:
     # TODO get  Wifi strength
@@ -203,7 +247,7 @@ class TemperatureHumidityPressureBME280:
             else:
                 return {
                     "temperature_F": celcius_to_fahrenheit(self._sensor.temperature),
-                    "humidity_%": self._sensor.humidity,
+                    "humidity_%": self._sensor.humidity / 100.0,
                     "pressure_hPa": self._sensor.pressure,
                 }
         except Exception as e:

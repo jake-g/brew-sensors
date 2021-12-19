@@ -10,8 +10,8 @@ GPS_LNG = -122.369141
 TIMEZONE = "US/Pacific"
 
 # I2C Addresses for multiple sensors
-CHARGE_I2C_ADDR = 0x44  # A1 jumped
-LOAD_I2C_ADDR = 0x41  # A0 jumped
+LOAD_I2C_ADDR = 0x44  # A1 jumped
+CHARGE_I2C_ADDR = 0x40  # no jump
 
 # Darksyk API Auth token.
 DARKSKY_AUTH = "d0693663c82510afb4d62edcc8355980"
@@ -22,10 +22,10 @@ SENSOR_MAP = {
     "FORECAST": sensors.Forecast(DARKSKY_AUTH, GPS_LAT, GPS_LNG),
     "PI": sensors.PiSensors(),
     "UV": sensors.UvVEML6070(),
-    "LIGHT": sensors.AmbientLightTSL2591(),
-    "AMBIENT": sensors.TemperatureHumidityPressureBME280(),
-    "MPTT_IN": sensors.HighSideCurrentINA219(address=CHARGE_I2C_ADDR),
-    "MPTT_OUT": sensors.HighSideCurrentINA219(address=LOAD_I2C_ADDR),
+    "LIGHT": sensors.AmbientLightBH1750(),
+    "AMBIENT": sensors.TemperatureMCP9808(),
+    "SOLAR": sensors.HighSideCurrentINA260(address=CHARGE_I2C_ADDR),
+    "LOAD": sensors.HighSideCurrentINA260(address=LOAD_I2C_ADDR),
 }
 
 
@@ -33,11 +33,11 @@ SENSOR_MAP = {
 cwd = os.path.dirname(os.path.realpath(__file__))
 LOG_CONF = {
     # Extra stdout logging verbosity for debug purposes
-    "debug": False,
+    "debug": True,
     # Name of local .tsv file for logging session.
     "local_logfile": os.path.join(cwd, "solar-logs/log_%d.tsv" % time.time()),
     # Log data every LOG_PERIOD seconds.
-    "log_period": 60 * 5,
+    "log_period": 30, #60 * 5,
     # Name of local .tsv file to backup data to.
     "local_backup": os.path.join(cwd, "solar-logs/gsheet_bkp.tsv"),
     # Backup data locally every LOG_PERIOD seconds.
@@ -55,19 +55,15 @@ LOG_CONF = {
     "expected_header": [
         "CLOCK_time",
         "LIGHT_lux",
-        "LIGHT_infrared",
-        "LIGHT_visible",
         "UV_uv",
         "UV_uv_index",
         "AMBIENT_temperature_F",
-        "AMBIENT_humidity_%",
-        "AMBIENT_pressure_hPa",
-        "MPTT_IN_load_current",
-        "MPTT_IN_load_voltage",
-        "MPTT_IN_shunt_voltage",
-        "MPTT_OUT_load_current",
-        "MPTT_OUT_load_voltage",
-        "MPTT_OUT_shunt_voltage",
+        "SOLAR_current",
+        "SOLAR_voltage",
+        "SOLAR_power",
+        "LOAD_current",
+        "LOAD_voltage",
+        "LOAD_power",
         "PI_ram_usage_%",
         "PI_disk_usage_%",
         "PI_cpu_temperature_F",

@@ -9,4 +9,8 @@ old/
 *.tsv
 *.csv
 *.swp
+*.sync-conflict*
+*.st*
+*.code-workspace
+.st*
 .DS_Store

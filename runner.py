@@ -18,11 +18,6 @@ def main(sensor_map, log_conf):
     # Logging to local .tsv file.
     tsv_log = TsvLogger(log_conf["local_logfile"], log_conf["expected_header"])
 
-    if log_conf["log_period"] < 90:
-        logging.warning(
-            "log_period=%d: DarkSky api only allows fetching 1000 times per day (every ~90 seconds)"
-            % log_conf["log_period"]
-        )
     logging.info("Logging sensors every %0.1f seconds" % log_conf["log_period"])
     # Logging to Google Sheet.
     if log_conf["gsheet_auth"] and log_conf["gsheet_name"]:
@@ -90,6 +85,7 @@ def main(sensor_map, log_conf):
                     tsv_log = TsvLogger(
                         log_conf["local_logfile"], log_conf["expected_header"]
                     )
+
             if gsheet.sheet:
                 try:
                     gsheet.sheet.append_row(row)
@@ -108,6 +104,8 @@ def main(sensor_map, log_conf):
                         header=log_conf["expected_header"],
                         sheet_idx=0,
                     )
+                    gsheet.sheet.append_row(row)
+
 
             # Maybe backup the data.
             last_backup_elapsed = time.time() - last_backup
