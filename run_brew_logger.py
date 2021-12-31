@@ -14,7 +14,7 @@ TIMEZONE = "US/Pacific"
 
 # Color of the tilt sensor to log
 TILT_COLOR = "black"
-STARTING_GRAVITY = 1.042
+STARTING_GRAVITY = 1.046
 
 # Darksky API Auth token.
 DARKSKY_AUTH = "d0693663c82510afb4d62edcc8355980"
@@ -39,9 +39,11 @@ LOG_CONF = {
     # Extra stdout logging verbosity for debug purposes
     "debug": True,
     # Name of local .tsv file for logging session.
-    "local_logfile": os.path.join(cwd, "brew-logs/log_%d.tsv" % time.time()),
+    "local_logfile": os.path.join(cwd, "brew-logs/log_%s.tsv" % BEER_NAME.lower().replace(' ', '_')),
     # Log data every LOG_PERIOD seconds.
     "log_period": 60 * 5,
+    # Name of local .json status file for session sensor status
+    "local_json_path":   os.path.join(cwd, "brew-logs"),
     # Name of local .tsv file to backup data to.
     "local_backup": os.path.join(cwd, "brew-logs/gsheet_bkp.tsv"),
     # Backup data locally every LOG_PERIOD seconds.

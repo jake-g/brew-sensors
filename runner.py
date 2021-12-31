@@ -4,7 +4,7 @@ import logging
 import time
 import json
 
-from loggers import gSheetLogger, TsvLogger
+from loggers import gSheetLogger, TsvLogger, StatusServer
 
 
 def main(sensor_map, log_conf):
@@ -17,7 +17,8 @@ def main(sensor_map, log_conf):
         logging.basicConfig(level=logging.INFO)
     # Logging to local .tsv file.
     tsv_log = TsvLogger(log_conf["local_logfile"], log_conf["expected_header"])
-
+    # Logging status to local .json file
+    json_status = StatusServer(log_conf["local_json_path"])
     logging.info("Logging sensors every %0.1f seconds" % log_conf["log_period"])
     # Logging to Google Sheet.
     if log_conf["gsheet_auth"] and log_conf["gsheet_name"]:
@@ -85,6 +86,18 @@ def main(sensor_map, log_conf):
                     tsv_log = TsvLogger(
                         log_conf["local_logfile"], log_conf["expected_header"]
                     )
+                    
+            if json_status:
+                try:
+                    json_status.write(
+                        status_filename='status.json', 
+                        status_dict=dict(zip(log_conf["expected_header"], row))
+                    )
+                except Exception as e:
+                    logging.error(
+                        "Failed to write status to json: %s...\n%s"
+                        % (log_conf["local_json"], e)
+                    ) 
 
             if gsheet.sheet:
                 try:

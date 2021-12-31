@@ -4,6 +4,9 @@ import gspread
 import logging
 import os
 import pandas
+import json
+import threading
+import http.server
 from oauth2client.service_account import ServiceAccountCredentials
 
 
@@ -23,15 +26,24 @@ class gSheetLogger:
     def _authorize_client(
         self,
         key_file,
+        n_tries=5, 
         scope=(
             "https://spreadsheets.google.com/feeds",
             "https://www.googleapis.com/auth/drive",
         ),
     ):
         try:
-            creds = ServiceAccountCredentials.from_json_keyfile_name(key_file, scope)
-            self.service_email = str(creds.service_account_email)
-            self.client = gspread.authorize(creds)
+            tries = 0
+            success = False
+            while success is False and tries < n_tries:
+                try:
+                    tries += 1
+                    creds = ServiceAccountCredentials.from_json_keyfile_name(key_file, scope)
+                    self.service_email = str(creds.service_account_email)
+                    self.client = gspread.authorize(creds)
+                    success = True
+                except Exception as e:
+                    logging.warning("Failed %d times...\n Error: %s" % (tries, e))
         except Exception as e:
             logging.error("%s\nFailed to authenticate client..." % e)
 
@@ -79,6 +91,39 @@ class gSheetLogger:
                 )
         except Exception as e:
             logging.error("Failed to set gsheet header: %s...\n%s" % (self.name, e))
+
+
+class StatusServer:
+    def __init__(self, json_path, port=8335):
+        self.json_path = json_path
+        self.port = port
+        self.host = '0.0.0.0'
+        self.start_json_server()
+
+    def start_json_server(self):
+        def handler_from(directory):
+            def _init(self, *args, **kwargs):
+                return http.server.SimpleHTTPRequestHandler.__init__(self, *args, directory=self.directory, **kwargs)
+            return type(f'HandlerFrom<{directory}>',
+                        (http.server.SimpleHTTPRequestHandler,),
+                        {'__init__': _init, 'directory': directory})
+        try:
+            server = http.server.HTTPServer(
+                server_address=(self.host, self.port), 
+                RequestHandlerClass=handler_from(self.json_path)
+            )
+            thread = threading.Thread(target = server.serve_forever)
+            thread.daemon = True
+            thread.start()
+            logging.debug('Starting server at http://%s:%d on thread: %s' % (self.host , self.port, thread))
+        except Exception as e:
+            logging.error("Failed to set up server on port %d...\n%s" % (self.port, e))
+
+
+    def write(self, status_filename, status_dict):
+        json_str = json.dumps(status_dict, sort_keys=True, indent=2)
+        with open(os.path.join(self.json_path, status_filename), 'w') as f:
+            f.write(json_str)
 
 
 class TsvLogger:
