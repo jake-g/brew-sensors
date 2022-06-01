@@ -14,7 +14,7 @@
         },
         {
             "name": "SSH FS - brew-monitor",
-            "uri": "ssh://brew-monitor/home/dietpi"
+            "uri": "ssh://brew-monitor/"
         }
     ],
 	"settings": {}
