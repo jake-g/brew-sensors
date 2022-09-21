@@ -107,17 +107,33 @@ def main(sensor_map, log_conf):
                         "Failed to append to gsheet: %s...\n%s"
                         % (log_conf["gsheet_name"], e)
                     )
-                    logging.error(
-                        "Trying to re-initialize gsheet: %s..."
-                        % log_conf["gsheet_name"]
-                    )
-                    gsheet = gSheetLogger(
-                        key_file=log_conf["gsheet_auth"],
-                        gsheet_name=log_conf["gsheet_name"],
-                        header=log_conf["expected_header"],
-                        sheet_idx=0,
-                    )
-                    gsheet.sheet.append_row(row)
+                    try:
+                        logging.error(
+                            "Trying to re-initialize gsheet: %s..."
+                            % log_conf["gsheet_name"]
+                        )
+                        gsheet = gSheetLogger(
+                            key_file=log_conf["gsheet_auth"],
+                            gsheet_name=log_conf["gsheet_name"],
+                            header=log_conf["expected_header"],
+                            sheet_idx=0,
+                        )
+                        gsheet.sheet.append_row(row)
+                    except Exception as e2:
+                        logging.error(
+                            "Last try to re-initialize gsheet: %s...sleeping 30s first"
+                            % log_conf["gsheet_name"]
+                        )
+                        time.sleep(30)
+                        gsheet = gSheetLogger(
+                            key_file=log_conf["gsheet_auth"],
+                            gsheet_name=log_conf["gsheet_name"],
+                            header=log_conf["expected_header"],
+                            sheet_idx=0,
+                        )
+                        gsheet.sheet.append_row(row)
+                        
+
 
 
             # Maybe backup the data.
