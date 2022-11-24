@@ -5,7 +5,7 @@ import sensors
 import tilt
 from runner import main
 
-BEER_NAME = "cold ipa"
+BEER_NAME = "bedroom"
 
 # Local Parameters
 GPS_LAT = 47.677601
