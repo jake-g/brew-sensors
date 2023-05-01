@@ -72,7 +72,7 @@ class ForcastOpenWeather:
             last_reading_delta = time.time() - self.last_reading_timestamp
             if last_reading_delta > self.rate_limit_seconds:
                 res = requests.get(url).json()
-                reading =  {
+                reading = {
                     "temperature_F": res["main"]["temp"],
                     "pressure": res["main"]["pressure"],
                     "apparentTemperature": res["main"]["feels_like"],
@@ -93,19 +93,19 @@ class ForcastOpenWeather:
                 self.last_reading_timestamp = time.time()
             else:
                 logging.warning(
-                    "Last reading was %ds ago which is less than the rate limit period of %ds, reusing last result..." % (last_reading_delta, self.rate_limit_seconds)
+                    "Last reading was %ds ago which is less than the rate limit period of %ds, reusing last result..." % (
+                        last_reading_delta, self.rate_limit_seconds)
                 )
                 reading = self.last_reading.copy()
-                
+
             if self.use_celcius:
                 reading["temperature_C"] = fahrenheit_to_celcius(
-                    data.pop("temperature_F", None)
+                    reading.pop("temperature_F", None)
                 )
             return reading
 
         except Exception as e:
             logging.error("Failed to get OpenWeatherMap data...\n  %s" % e)
-
 
 
 class HighSideCurrentINA219:
@@ -119,25 +119,31 @@ class HighSideCurrentINA219:
     def _init_sensor(self):
         try:
             if self.address:
-                self._sensor = adafruit_ina219.INA219(board.I2C(), addr=self.address)
+                self._sensor = adafruit_ina219.INA219(
+                    board.I2C(), addr=self.address)
             else:
                 self._sensor = adafruit_ina219.INA219(board.I2C())
         except Exception as e:
             logging.error(
-                "Failed to initialize %s current sensor...\n  %s" % (self.model, e)
+                "Failed to initialize %s current sensor...\n  %s" % (
+                    self.model, e)
             )
 
     def get_reading(self):
         try:
             return {
-                "voltage": self._sensor.bus_voltage,  # voltage on V- (load side)
+                # voltage on V- (load side)
+                "voltage": self._sensor.bus_voltage,
                 "current": self._sensor.current,  # current in mA
-                "shunt_voltage": self._sensor.shunt_voltage,  # voltage between V+ and V- across the shunt
+                # voltage between V+ and V- across the shunt
+                "shunt_voltage": self._sensor.shunt_voltage,
             }
         except Exception as e:
             logging.error(
-                "Failed to get %s current sensor data...\n  %s" % (self.model, e)
+                "Failed to get %s current sensor data...\n  %s" % (
+                    self.model, e)
             )
+
 
 class HighSideCurrentINA260:
     def __init__(self, address=0x44):
@@ -150,17 +156,20 @@ class HighSideCurrentINA260:
     def _init_sensor(self):
         try:
             if self.address:
-                self._sensor = adafruit_ina260.INA260(board.I2C(), address=self.address)
+                self._sensor = adafruit_ina260.INA260(
+                    board.I2C(), address=self.address)
             else:
                 self._sensor = adafruit_ina260.INA260(board.I2C())
         except Exception as e:
             logging.error(
-                "Failed to initialize %s current sensor...\n  %s" % (self.model, e)
+                "Failed to initialize %s current sensor...\n  %s" % (
+                    self.model, e)
             )
 
     def get_reading(self):
         try:
-            #print('Shunt: %s\t%0.2f V\t%0.2f mA\t%0.2f W'% (hex(self.address), self._sensor.voltage, self._sensor.current, self._sensor.power/1000.0))
+            # print('Shunt: %s\t%0.2f V\t%0.2f mA\t%0.2f W'% (hex(self.address),
+            # self._sensor.voltage, self._sensor.current, self._sensor.power/1000.0))
             return {
                 "voltage": self._sensor.voltage,  # voltage on V- (load side)
                 "current": self._sensor.current,  # current in mA
@@ -168,8 +177,10 @@ class HighSideCurrentINA260:
             }
         except Exception as e:
             logging.error(
-                "Failed to get %s current sensor data...\n  %s" % (self.model, e)
+                "Failed to get %s current sensor data...\n  %s" % (
+                    self.model, e)
             )
+
 
 class PiSensors:
     # TODO get  Wifi strength
@@ -217,7 +228,9 @@ class PiSensors:
             return reading
 
         except Exception as e:
-            logging.error("Failed to get %s sensor data...\n  %s" % (self.model, e))
+            logging.error("Failed to get %s sensor data...\n  %s" %
+                          (self.model, e))
+
 
 class AirQualitySGP30:
     def __init__(self, use_celcius=False, address=0x58):
@@ -232,33 +245,36 @@ class AirQualitySGP30:
             self._sensor = adafruit_sgp30.Adafruit_SGP30(board.I2C())
         except Exception as e:
             logging.error(
-                "Failed to initialize %s air quality sensor...\n  %s" % (self.model, e)
+                "Failed to initialize %s air quality sensor...\n  %s" % (
+                    self.model, e)
             )
         self._set_temperature_humidity()
 
-
     def _set_temperature_humidity(self):
-        try: # get calibration temp / humidity
-            reading = TemperatureHumidityPressureBME280(use_celcius=True).get_reading()
-            self._sensor.set_iaq_relative_humidity(celsius=reading["temperature_C"],  
-                                                relative_humidity=reading["humidity_%"])
+        try:  # get calibration temp / humidity
+            reading = TemperatureHumidityPressureBME280(
+                use_celcius=True).get_reading()
+            self._sensor.set_iaq_relative_humidity(celsius=reading["temperature_C"],
+                                                   relative_humidity=reading["humidity_%"])
         except Exception as e:
             logging.warning(
                 "Failed to get baseline from TemperatureHumidityPressureBME280...\n  %s" % e
-            )  
-                 
+            )
+
     def get_reading(self):
         self._set_temperature_humidity()
-        try:  
+        try:
             return {
-                    "TVOC": self._sensor.TVOC,
-                    "eCO2": self._sensor.eCO2,
-                }
+                "TVOC": self._sensor.TVOC,
+                "eCO2": self._sensor.eCO2,
+            }
         except Exception as e:
             logging.error(
-                "Failed to get %s  air quality sensor data...\n  %s" % (self.model, e)
+                "Failed to get %s  air quality sensor data...\n  %s" % (
+                    self.model, e)
             )
-            
+
+
 class TemperatureMCP9808:
     def __init__(self, use_celcius=False, address=0x18):
         self._sensor = None
@@ -273,7 +289,8 @@ class TemperatureMCP9808:
             self._sensor = adafruit_mcp9808.MCP9808(board.I2C())
         except Exception as e:
             logging.error(
-                "Failed to initialize %s ambient temp sensor...\n  %s" % (self.model, e)
+                "Failed to initialize %s ambient temp sensor...\n  %s" % (
+                    self.model, e)
             )
 
     def get_reading(self):
@@ -288,8 +305,10 @@ class TemperatureMCP9808:
                 }
         except Exception as e:
             logging.error(
-                "Failed to get %s ambient temp sensor data...\n  %s" % (self.model, e)
+                "Failed to get %s ambient temp sensor data...\n  %s" % (
+                    self.model, e)
             )
+
 
 class TemperatureHumidityPressureBME280:
     def __init__(self, use_celcius=False, address=0x76):
@@ -331,6 +350,7 @@ class TemperatureHumidityPressureBME280:
                 % (self.model, e)
             )
 
+
 class LightBH1750:
     def __init__(self, address=0x23):
         self._sensor = None
@@ -351,7 +371,9 @@ class LightBH1750:
         try:
             return {"lux": self._sensor.lux}
         except Exception as e:
-            logging.error("Failed to get %s lux sensor data...\n  %s" % (self.model, e))
+            logging.error(
+                "Failed to get %s lux sensor data...\n  %s" % (self.model, e))
+
 
 class LightIrVisTSL2591:
     def __init__(self, address=0x29, gain=adafruit_tsl2591.GAIN_LOW):
@@ -368,7 +390,8 @@ class LightIrVisTSL2591:
             self._sensor.gain = self.gain
         except Exception as e:
             logging.error(
-                "Failed to initialize %s lux ir sensor...\n  %s" % (self.model, e)
+                "Failed to initialize %s lux ir sensor...\n  %s" % (
+                    self.model, e)
             )
 
     def get_reading(self):
@@ -379,7 +402,9 @@ class LightIrVisTSL2591:
                 "visible": self._sensor.visible,
             }
         except Exception as e:
-            logging.error("Failed to get %s lux ir sensor data...\n  %s" % (self.model, e))
+            logging.error(
+                "Failed to get %s lux ir sensor data...\n  %s" % (self.model, e))
+
 
 class LightVisVEML7700:
     def __init__(self, address=0x10):
@@ -393,7 +418,7 @@ class LightVisVEML7700:
 
     def _init_sensor(self):
         try:
-            self._sensor =  adafruit_veml7700.VEML7700(board.I2C())
+            self._sensor = adafruit_veml7700.VEML7700(board.I2C())
         except Exception as e:
             logging.error(
                 "Failed to initialize %s lux sensor...\n  %s" % (self.model, e)
@@ -406,7 +431,9 @@ class LightVisVEML7700:
                 "visible": self._sensor.light,
             }
         except Exception as e:
-            logging.error("Failed to get %s lux sensor data...\n  %s" % (self.model, e))
+            logging.error(
+                "Failed to get %s lux sensor data...\n  %s" % (self.model, e))
+
 
 class LightUvVEML6070:
     def __init__(self, address=0x18):
@@ -433,44 +460,5 @@ class LightUvVEML6070:
                 "uv_index": self._sensor.get_index(self._sensor.uv_raw),
             }
         except Exception as e:
-            logging.error("Failed to get %s UV sensor data...\n  %s" % (self.model, e))
-
-
-import forecastio
-class ForecastDarkSyyDEPRECATED:
-    def __init__(self, api_key, lat, lng, use_celcius=False, rate_limit_seconds=180):
-        self.lat = lat
-        self.lng = lng
-        self.api_key = api_key
-        self.use_celcius = use_celcius
-        self.last_reading = None
-        self.last_reading_timestamp = 0
-        self.rate_limit_seconds = rate_limit_seconds
-
-    def get_reading(self):
-        try:
-            last_reading_delta = time.time() - self.last_reading_timestamp
-            if last_reading_delta > self.rate_limit_seconds:
-                res = forecastio.load_forecast(
-                    self.api_key, self.lat, self.lng
-                ).currently()
-                darksky_forecast = res.d
-                self.last_reading = darksky_forecast.copy()
-                self.last_reading_timestamp = time.time()
-            else:
-                logging.warning(
-                    "Last reading was %ds ago which is less than the rate limit period of %ds, reusing last result..." % (last_reading_delta, self.rate_limit_seconds)
-                )
-                darksky_forecast = self.last_reading.copy()
-            
-            if self.use_celcius:
-                darksky_forecast["temperature_C"] = fahrenheit_to_celcius(
-                    darksky_forecast.pop("temperature", None)
-                )
-            else:
-                darksky_forecast["temperature_F"] = darksky_forecast.pop(
-                    "temperature", None
-                )
-            return darksky_forecast
-        except Exception as e:
-            logging.error("Failed to get DarkSky data...\n  %s" % e)
+            logging.error("Failed to get %s UV sensor data...\n  %s" %
+                          (self.model, e))

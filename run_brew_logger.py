@@ -14,11 +14,9 @@ TIMEZONE = "US/Pacific"
 
 # Color of the tilt sensor to log
 TILT_COLOR = "black"
-STARTING_GRAVITY = 1.0 # 1.058
+STARTING_GRAVITY = 1.0  # 1.058
 
 
-# DEPRECATED Darksky API Auth token.
-# DARKSKY_AUTH = "d0693663c82510afb4d62edcc8355980"
 OPENWEATHER_AUTH = "PLACEHOLDER"
 
 # Dictionary mapping sensor name to sensor objects to be logged
@@ -33,7 +31,6 @@ SENSOR_MAP = {
     "pi": sensors.PiSensors(),
     # "temp_hum": sensors.TemperatureMCP9808(),
     # "light": sensors.LightBH1750(),
-    # "forecast_darksky": sensors.Forecast(DARKSKY_AUTH, GPS_LAT, GPS_LNG),
 }
 print('brewing %s with SG: %0.2f' % (BEER_NAME, STARTING_GRAVITY))
 print('logging sensors: %s' % sorted(SENSOR_MAP.keys()))
