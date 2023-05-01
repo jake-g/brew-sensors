@@ -73,21 +73,21 @@ class ForcastOpenWeather:
             if last_reading_delta > self.rate_limit_seconds:
                 res = requests.get(url).json()
                 reading = {
-                    "temperature_F": res["main"]["temp"],
-                    "pressure": res["main"]["pressure"],
-                    "apparentTemperature": res["main"]["feels_like"],
-                    "humidity": res["main"]["humidity"],
-                    "cloudCover": res["clouds"]["all"],
-                    "sunrise": res["sys"]["sunrise"],
-                    "sunset": res["sys"]["sunset"],
-                    "time": res["dt"],
-                    "condition": res["weather"][0]["main"],
-                    "summary": res["weather"][0]["description"],
-                    "icon": res["weather"][0]["icon"],
-                    "location": res["name"],
-                    "windSpeed": res["wind"]["speed"],
-                    "windGust": res["wind"]["gust"],
-                    "windBearing": res["wind"]["deg"],
+                    "temperature_F": res["main"].get("temp", None),
+                    "pressure": res["main"].get("pressure", None),
+                    "apparentTemperature": res["main"].get("feels_like", None),
+                    "humidity": res["main"].get("humidity", None),
+                    "cloudCover": res["clouds"].get("all", None),
+                    "sunrise": res["sys"].get("sunrise", None),
+                    "sunset": res["sys"].get("sunset", None),
+                    "time": res.get("dt", None),
+                    "condition": res["weather"][0].get("main", None),
+                    "summary": res["weather"][0].get("description", None),
+                    "icon": res["weather"][0].get("icon", None),
+                    "location": res.get("name", None),
+                    "windSpeed": res["wind"].get("speed", None),
+                    "windGust": res["wind"].get("gust", None),
+                    "windBearing": res["wind"].get("deg", None),
                 }
                 self.last_reading = reading.copy()
                 self.last_reading_timestamp = time.time()
@@ -398,8 +398,8 @@ class LightIrVisTSL2591:
         try:
             return {
                 "lux": self._sensor.lux,
-                "infrared": self._sensor.infrared,
-                "visible": self._sensor.visible,
+                "ir": self._sensor.infrared,
+                "vis": self._sensor.visible,
             }
         except Exception as e:
             logging.error(

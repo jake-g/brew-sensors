@@ -75,7 +75,7 @@ LOG_CONF = {
         "light_ir",
         "light_vis",
         "light_uv_uv",
-        "light_uv_index",
+        "light_uv_uv_index",
         "pi_ram_usage_%",
         "pi_disk_usage_%",
         "pi_cpu_temperature_F",
