@@ -5,41 +5,47 @@ import sensors
 import tilt
 from runner import main
 
-BEER_NAME = "coffee_stout"
+BEER_NAME = "debug"
 
 # Local Parameters
-GPS_LAT = 47.677601
-GPS_LNG = -122.369141
+GPS_LAT = 47.671866
+GPS_LNG = -122.394456
 TIMEZONE = "US/Pacific"
 
 # Color of the tilt sensor to log
 TILT_COLOR = "black"
-STARTING_GRAVITY = 1.058
+STARTING_GRAVITY = 1.0 # 1.058
 
-# Darksky API Auth token.
-DARKSKY_AUTH = "d0693663c82510afb4d62edcc8355980"
+
+# DEPRECATED Darksky API Auth token.
+# DARKSKY_AUTH = "d0693663c82510afb4d62edcc8355980"
+OPENWEATHER_AUTH = "PLACEHOLDER"
 
 # Dictionary mapping sensor name to sensor objects to be logged
 SENSOR_MAP = {
     "clock": sensors.Timestamp(timezone=TIMEZONE),
-    "forecast": sensors.Forecast(DARKSKY_AUTH, GPS_LAT, GPS_LNG),
+    "forecast": sensors.ForcastOpenWeather(OPENWEATHER_AUTH, GPS_LAT, GPS_LNG),
     "beer": tilt.TiltHydrometerSensor(TILT_COLOR, sg=STARTING_GRAVITY),
-    "ambient": sensors.TemperatureHumidityPressureBME280(),
-    # "ambient": sensors.TemperatureMCP9808(),
-    # "light": sensors.AmbientLightBH1750(),
-    # "uv": sensors.UvVEML6070(),
+    "amb": sensors.TemperatureHumidityPressureBME280(),
+    "air": sensors.AirQualitySGP30(),
+    "light": sensors.LightIrVisTSL2591(),
+    "light_uv": sensors.LightUvVEML6070(),
     "pi": sensors.PiSensors(),
+    # "temp_hum": sensors.TemperatureMCP9808(),
+    # "light": sensors.LightBH1750(),
+    # "forecast_darksky": sensors.Forecast(DARKSKY_AUTH, GPS_LAT, GPS_LNG),
 }
-print('brewin %s with SG: %0.2f' % (BEER_NAME, STARTING_GRAVITY))
+print('brewing %s with SG: %0.2f' % (BEER_NAME, STARTING_GRAVITY))
 print('logging sensors: %s' % sorted(SENSOR_MAP.keys()))
 
 # Configuration for sensor logging.
 cwd = os.path.dirname(os.path.realpath(__file__))
+name_key = BEER_NAME.lower().replace(' ', '_')
 LOG_CONF = {
     # Extra stdout logging verbosity for debug purposes
     "debug": True,
     # Name of local .tsv file for logging session.
-    "local_logfile": os.path.join(cwd, "brew-logs/log_%s.tsv" % BEER_NAME.lower().replace(' ', '_')),
+    "local_logfile": os.path.join(cwd, "brew-logs/log_%s.tsv" % name_key),
     # Log data every LOG_PERIOD seconds.
     "log_period": 60 * 5,
     # Name of local .json status file for session sensor status
@@ -63,12 +69,16 @@ LOG_CONF = {
         "beer_gravity",
         "beer_alcohol_%",
         "beer_temperature_F",
-        "ambient_temperature_F",
-        "ambient_humidity_%",
-        "ambient_pressure_hPa",
-        # "light_lux",
-        # "uv_uv",
-        # "uv_index",
+        "amb_temperature_F",
+        "amb_humidity_%",
+        "amb_pressure_hPa",
+        "air_TVOC",
+        "air_eCO2",
+        "light_lux",
+        "light_ir",
+        "light_vis",
+        "light_uv_uv",
+        "light_uv_index",
         "pi_ram_usage_%",
         "pi_disk_usage_%",
         "pi_cpu_temperature_F",
@@ -77,17 +87,13 @@ LOG_CONF = {
         "forecast_pressure",
         "forecast_apparentTemperature",
         "forecast_cloudCover",
-        "forecast_dewPoint",
+        "forecast_sunrise",
+        "forecast_sunset",
+        "forecast_condition",
         "forecast_icon",
-        "forecast_nearestStormBearing",
-        "forecast_nearestStormDistance",
-        "forecast_ozone",
-        "forecast_precipIntensity",
-        "forecast_precipProbability",
         "forecast_summary",
+        "forecast_location",
         "forecast_time",
-        "forecast_uvIndex",
-        "forecast_visibility",
         "forecast_windBearing",
         "forecast_windGust",
         "forecast_windSpeed",

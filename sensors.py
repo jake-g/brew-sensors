@@ -2,17 +2,39 @@ import logging
 from datetime import datetime
 import os
 import time
-import forecastio
-from pytz import timezone
+import requests
 
+from pytz import timezone
 import board
+
+######## i2c ##########
+# INA219 - High Side DC Current Sensor
+# Used to measure DC voltage, current, power, and energy
 import adafruit_ina219
+# INA260 - High/Low Side DC Current Sensor
+# Used to measure voltage, current, power, and energy for both high and low-side applications
 import adafruit_ina260
+# BH1750 - Light Sensor
+# Used to measure ambient light intensity
 import adafruit_bh1750
+# VEML6070 - UV Light Sensor
+# Used to measure the intensity of ultraviolet (UV) light
 import adafruit_veml6070
-import adafruit_mcp9808
-import adafruit_bme280
+# VEML7700 - Ambient Light Sensor
+# Used to measure ambient light intensity, with high precision and dynamic range
+import adafruit_veml7700
+# TSL2591 - Light Sensor
+# Used to measure ambient light intensity with both visible and infrared light sensors
 import adafruit_tsl2591
+# MCP9808 - Temperature Sensor
+# Used to measure ambient temperature with high accuracy
+import adafruit_mcp9808
+# BME280 - Temperature, Humidity, and Barometric Pressure Sensor
+# Used to measure temperature, humidity, and barometric pressure
+import adafruit_bme280
+# SGP30 - Air Quality Sensor
+# Used to measure indoor air quality (TVOC and CO2eq)
+import adafruit_sgp30
 
 
 def celcius_to_fahrenheit(celcius):
@@ -32,43 +54,58 @@ class Timestamp:
         return {"time": datetime.now(timezone(self.timezone)).strftime(self.format)}
 
 
-class Forecast:
+class ForcastOpenWeather:
+
     def __init__(self, api_key, lat, lng, use_celcius=False, rate_limit_seconds=180):
+        self.api_key = api_key
         self.lat = lat
         self.lng = lng
-        self.api_key = api_key
         self.use_celcius = use_celcius
         self.last_reading = None
         self.last_reading_timestamp = 0
         self.rate_limit_seconds = rate_limit_seconds
+        self.base_url = "https://api.openweathermap.org/data/2.5/weather"
 
     def get_reading(self):
         try:
+            url = f"{self.base_url}?lat={self.lat}&lon={self.lng}&appid={self.api_key}&units=imperial"
             last_reading_delta = time.time() - self.last_reading_timestamp
             if last_reading_delta > self.rate_limit_seconds:
-                res = forecastio.load_forecast(
-                    self.api_key, self.lat, self.lng
-                ).currently()
-                darksky_forecast = res.d
-                self.last_reading = darksky_forecast.copy()
+                res = requests.get(url).json()
+                reading =  {
+                    "temperature_F": res["main"]["temp"],
+                    "pressure": res["main"]["pressure"],
+                    "apparentTemperature": res["main"]["feels_like"],
+                    "humidity": res["main"]["humidity"],
+                    "cloudCover": res["clouds"]["all"],
+                    "sunrise": res["sys"]["sunrise"],
+                    "sunset": res["sys"]["sunset"],
+                    "time": res["dt"],
+                    "condition": res["weather"][0]["main"],
+                    "summary": res["weather"][0]["description"],
+                    "icon": res["weather"][0]["icon"],
+                    "location": res["name"],
+                    "windSpeed": res["wind"]["speed"],
+                    "windGust": res["wind"]["gust"],
+                    "windBearing": res["wind"]["deg"],
+                }
+                self.last_reading = reading.copy()
                 self.last_reading_timestamp = time.time()
             else:
                 logging.warning(
                     "Last reading was %ds ago which is less than the rate limit period of %ds, reusing last result..." % (last_reading_delta, self.rate_limit_seconds)
                 )
-                darksky_forecast = self.last_reading.copy()
-            
+                reading = self.last_reading.copy()
+                
             if self.use_celcius:
-                darksky_forecast["temperature_C"] = fahrenheit_to_celcius(
-                    darksky_forecast.pop("temperature", None)
+                reading["temperature_C"] = fahrenheit_to_celcius(
+                    data.pop("temperature_F", None)
                 )
-            else:
-                darksky_forecast["temperature_F"] = darksky_forecast.pop(
-                    "temperature", None
-                )
-            return darksky_forecast
+            return reading
+
         except Exception as e:
-            logging.error("Failed to get DarkSky data...\n  %s" % e)
+            logging.error("Failed to get OpenWeatherMap data...\n  %s" % e)
+
 
 
 class HighSideCurrentINA219:
@@ -182,7 +219,46 @@ class PiSensors:
         except Exception as e:
             logging.error("Failed to get %s sensor data...\n  %s" % (self.model, e))
 
+class AirQualitySGP30:
+    def __init__(self, use_celcius=False, address=0x58):
+        self._sensor = None
+        self.address = address
+        self.model = "SGP30"
+        self.url = "https://learn.adafruit.com/adafruit-sgp30-gas-tvoc-eco2-mox-sensor/overview"
+        self._init_sensor()
 
+    def _init_sensor(self):
+        try:
+            self._sensor = adafruit_sgp30.Adafruit_SGP30(board.I2C())
+        except Exception as e:
+            logging.error(
+                "Failed to initialize %s air quality sensor...\n  %s" % (self.model, e)
+            )
+        self._set_temperature_humidity()
+
+
+    def _set_temperature_humidity(self):
+        try: # get calibration temp / humidity
+            reading = TemperatureHumidityPressureBME280(use_celcius=True).get_reading()
+            self._sensor.set_iaq_relative_humidity(celsius=reading["temperature_C"],  
+                                                relative_humidity=reading["humidity_%"])
+        except Exception as e:
+            logging.warning(
+                "Failed to get baseline from TemperatureHumidityPressureBME280...\n  %s" % e
+            )  
+                 
+    def get_reading(self):
+        self._set_temperature_humidity()
+        try:  
+            return {
+                    "TVOC": self._sensor.TVOC,
+                    "eCO2": self._sensor.eCO2,
+                }
+        except Exception as e:
+            logging.error(
+                "Failed to get %s  air quality sensor data...\n  %s" % (self.model, e)
+            )
+            
 class TemperatureMCP9808:
     def __init__(self, use_celcius=False, address=0x18):
         self._sensor = None
@@ -214,7 +290,6 @@ class TemperatureMCP9808:
             logging.error(
                 "Failed to get %s ambient temp sensor data...\n  %s" % (self.model, e)
             )
-
 
 class TemperatureHumidityPressureBME280:
     def __init__(self, use_celcius=False, address=0x76):
@@ -256,8 +331,7 @@ class TemperatureHumidityPressureBME280:
                 % (self.model, e)
             )
 
-
-class AmbientLightBH1750:
+class LightBH1750:
     def __init__(self, address=0x23):
         self._sensor = None
         self.address = address
@@ -279,8 +353,7 @@ class AmbientLightBH1750:
         except Exception as e:
             logging.error("Failed to get %s lux sensor data...\n  %s" % (self.model, e))
 
-
-class AmbientLightTSL2591:
+class LightIrVisTSL2591:
     def __init__(self, address=0x29, gain=adafruit_tsl2591.GAIN_LOW):
         self._sensor = None
         self.address = address
@@ -293,10 +366,9 @@ class AmbientLightTSL2591:
         try:
             self._sensor = adafruit_tsl2591.TSL2591(board.I2C())
             self._sensor.gain = self.gain
-
         except Exception as e:
             logging.error(
-                "Failed to initialize %s lux sensor...\n  %s" % (self.model, e)
+                "Failed to initialize %s lux ir sensor...\n  %s" % (self.model, e)
             )
 
     def get_reading(self):
@@ -307,10 +379,36 @@ class AmbientLightTSL2591:
                 "visible": self._sensor.visible,
             }
         except Exception as e:
+            logging.error("Failed to get %s lux ir sensor data...\n  %s" % (self.model, e))
+
+class LightVisVEML7700:
+    def __init__(self, address=0x10):
+        self._sensor = None
+        self.address = address
+        self.model = "VEML7700"
+        self.url = (
+            "https://learn.adafruit.com/adafruit-veml7700/overview"
+        )
+        self._init_sensor()
+
+    def _init_sensor(self):
+        try:
+            self._sensor =  adafruit_veml7700.VEML7700(board.I2C())
+        except Exception as e:
+            logging.error(
+                "Failed to initialize %s lux sensor...\n  %s" % (self.model, e)
+            )
+
+    def get_reading(self):
+        try:
+            return {
+                "lux": self._sensor.lux,
+                "visible": self._sensor.light,
+            }
+        except Exception as e:
             logging.error("Failed to get %s lux sensor data...\n  %s" % (self.model, e))
 
-
-class UvVEML6070:
+class LightUvVEML6070:
     def __init__(self, address=0x18):
         self._sensor = None
         self.address = address
@@ -337,3 +435,42 @@ class UvVEML6070:
         except Exception as e:
             logging.error("Failed to get %s UV sensor data...\n  %s" % (self.model, e))
 
+
+import forecastio
+class ForecastDarkSyyDEPRECATED:
+    def __init__(self, api_key, lat, lng, use_celcius=False, rate_limit_seconds=180):
+        self.lat = lat
+        self.lng = lng
+        self.api_key = api_key
+        self.use_celcius = use_celcius
+        self.last_reading = None
+        self.last_reading_timestamp = 0
+        self.rate_limit_seconds = rate_limit_seconds
+
+    def get_reading(self):
+        try:
+            last_reading_delta = time.time() - self.last_reading_timestamp
+            if last_reading_delta > self.rate_limit_seconds:
+                res = forecastio.load_forecast(
+                    self.api_key, self.lat, self.lng
+                ).currently()
+                darksky_forecast = res.d
+                self.last_reading = darksky_forecast.copy()
+                self.last_reading_timestamp = time.time()
+            else:
+                logging.warning(
+                    "Last reading was %ds ago which is less than the rate limit period of %ds, reusing last result..." % (last_reading_delta, self.rate_limit_seconds)
+                )
+                darksky_forecast = self.last_reading.copy()
+            
+            if self.use_celcius:
+                darksky_forecast["temperature_C"] = fahrenheit_to_celcius(
+                    darksky_forecast.pop("temperature", None)
+                )
+            else:
+                darksky_forecast["temperature_F"] = darksky_forecast.pop(
+                    "temperature", None
+                )
+            return darksky_forecast
+        except Exception as e:
+            logging.error("Failed to get DarkSky data...\n  %s" % e)
