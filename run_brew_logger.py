@@ -5,7 +5,7 @@ import sensors
 import tilt
 from runner import main
 
-BEER_NAME = "ginger-beer-v8"
+BEER_NAME = "coffee_stout"
 
 # Local Parameters
 GPS_LAT = 47.677601
@@ -14,7 +14,7 @@ TIMEZONE = "US/Pacific"
 
 # Color of the tilt sensor to log
 TILT_COLOR = "black"
-STARTING_GRAVITY = 1.05
+STARTING_GRAVITY = 1.058
 
 # Darksky API Auth token.
 DARKSKY_AUTH = "d0693663c82510afb4d62edcc8355980"
