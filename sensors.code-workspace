@@ -1,10 +1,6 @@
 {
 	"folders": [
         {
-            "name": "dietpi_homebrew_setup",
-            "path": "..\\dietpi_homebrew_setup"
-        },
-        {
             "name": "sensors",
             "path": "."
         },
