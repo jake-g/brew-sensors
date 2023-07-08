@@ -5,7 +5,7 @@ import sensors
 import tilt
 from runner import main
 
-BEER_NAME = "debug"
+BEER_NAME = "british_ale"
 
 # Local Parameters
 GPS_LAT = 47.671866
@@ -14,7 +14,7 @@ TIMEZONE = "US/Pacific"
 
 # Color of the tilt sensor to log
 TILT_COLOR = "black"
-STARTING_GRAVITY = 1.0  # 1.058
+STARTING_GRAVITY = 1.034  # 1.058
 
 
 OPENWEATHER_AUTH = "PLACEHOLDER"
