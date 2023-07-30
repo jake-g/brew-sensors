@@ -101,7 +101,7 @@ def main(sensor_map, log_conf):
 
             if gsheet.sheet:
                 try:
-                    gsheet.sheet.append_row(row)
+                    gsheet.sheet.append_row(row, value_input_option='USER_ENTERED')
                 except Exception as e:
                     logging.error(
                         "Failed to append to gsheet: %s...\n%s"
