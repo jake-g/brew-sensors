@@ -1,11 +1,10 @@
 import os
-import time
-
 import sensors
 import tilt
 from runner import main
 
-BEER_NAME = "british_ale"
+BEER_NAME = "cosmic_haze"
+STARTING_GRAVITY = 1.050
 
 # Local Parameters
 GPS_LAT = 47.671866
@@ -14,11 +13,8 @@ TIMEZONE = "US/Pacific"
 
 # Color of the tilt sensor to log
 TILT_COLOR = "black"
-STARTING_GRAVITY = 1.034  # 1.058
-
-
+# Open Weather API Key
 OPENWEATHER_AUTH = "PLACEHOLDER"
-
 # Dictionary mapping sensor name to sensor objects to be logged
 SENSOR_MAP = {
     "clock": sensors.Timestamp(timezone=TIMEZONE),
@@ -29,8 +25,6 @@ SENSOR_MAP = {
     "light": sensors.LightIrVisTSL2591(),
     "light_uv": sensors.LightUvVEML6070(),
     "pi": sensors.PiSensors(),
-    # "temp_hum": sensors.TemperatureMCP9808(),
-    # "light": sensors.LightBH1750(),
 }
 print('brewing %s with SG: %0.2f' % (BEER_NAME, STARTING_GRAVITY))
 print('logging sensors: %s' % sorted(SENSOR_MAP.keys()))
@@ -56,7 +50,6 @@ LOG_CONF = {
     # Maximum number of decimal places for entry.
     "max_precision": 4,
     # Authentication json for GDrive api.
-    # see:
     # https://www.twilio.com/blog/2017/02/an-easy-way-to-read-and-write-to-a-google-spreadsheet-in-python.html
     "gsheet_auth": os.path.join(cwd, "auth/brew-secret.json"),
     # This is used to validate the logging header matches in all places
