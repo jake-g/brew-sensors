@@ -3,8 +3,8 @@ import sensors
 import tilt
 from runner import main
 
-BEER_NAME = "cosmic_haze"
-STARTING_GRAVITY = 1.050
+BEER_NAME = "ginger-beer-v9"
+STARTING_GRAVITY = 1.042
 
 # Local Parameters
 GPS_LAT = 47.671866
