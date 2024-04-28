@@ -31,7 +31,7 @@ import adafruit_tsl2591
 import adafruit_mcp9808
 # BME280 - Temperature, Humidity, and Barometric Pressure Sensor
 # Used to measure temperature, humidity, and barometric pressure
-import adafruit_bme280
+from adafruit_bme280 import basic as adafruit_bme280
 # SGP30 - Air Quality Sensor
 # Used to measure indoor air quality (TVOC and CO2eq)
 import adafruit_sgp30

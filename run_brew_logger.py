@@ -4,7 +4,7 @@ import tilt
 from runner import main
 
 BEER_NAME = "american_session"
-STARTING_GRAVITY = 1.040
+STARTING_GRAVITY = 1.039
 
 # Local Parameters
 GPS_LAT = 47.671866
