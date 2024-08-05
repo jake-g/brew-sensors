@@ -3,13 +3,14 @@ import sensors
 import tilt
 from runner import main
 
-BEER_NAME = "basement_summer"
-STARTING_GRAVITY = 1.050
+BEER_NAME = "white_ale"
+STARTING_GRAVITY = 1.056
 
 # Local Parameters
-GPS_LAT = 47.671866
-GPS_LNG = -122.394456
 TIMEZONE = "US/Pacific"
+# Ravenna House
+GPS_LAT = 47.67426215945847
+GPS_LNG = -122.30416191291008
 
 # Color of the tilt sensor to log
 TILT_COLOR = "black"
