@@ -8,9 +8,9 @@ STARTING_GRAVITY = 1.056
 
 # Local Parameters
 TIMEZONE = "US/Pacific"
-# Ravenna House
-GPS_LAT = 47.67426215945847
-GPS_LNG = -122.30416191291008
+# UW
+GPS_LAT = 47.655548
+GPS_LNG = -122.303200
 
 # Color of the tilt sensor to log
 TILT_COLOR = "black"
