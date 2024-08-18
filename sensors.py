@@ -97,7 +97,10 @@ class ForcastOpenWeather:
                         last_reading_delta, self.rate_limit_seconds)
                 )
                 reading = self.last_reading.copy()
-
+                
+            # Convert measurements
+            if reading["humidity"]: # convert to 0 to 1 scale
+              reading["humidity"] = reading["humidity"] / 100.0 
             if self.use_celcius:
                 reading["temperature_C"] = fahrenheit_to_celcius(
                     reading.pop("temperature_F", None)
