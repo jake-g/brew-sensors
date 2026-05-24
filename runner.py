@@ -21,6 +21,7 @@ def main(sensor_map, log_conf):
     json_status = StatusServer(log_conf["local_json_path"])
     logging.info("Logging sensors every %0.1f seconds" % log_conf["log_period"])
     # Logging to Google Sheet.
+    gsheet = None
     if log_conf["gsheet_auth"] and log_conf["gsheet_name"]:
         gsheet = gSheetLogger(
             key_file=log_conf["gsheet_auth"],
@@ -96,42 +97,57 @@ def main(sensor_map, log_conf):
                 except Exception as e:
                     logging.error(
                         "Failed to write status to json: %s...\n%s"
-                        % (log_conf["local_json"], e)
+                        % (log_conf["local_json_path"], e)
                     ) 
 
-            if gsheet.sheet:
-                try:
-                    gsheet.sheet.append_row(row, value_input_option='USER_ENTERED')
-                except Exception as e:
-                    logging.error(
-                        "Failed to append to gsheet: %s...\n%s"
-                        % (log_conf["gsheet_name"], e)
-                    )
+            if gsheet:
+                if not gsheet.sheet:
                     try:
-                        logging.error(
-                            "Trying to re-initialize gsheet: %s..."
-                            % log_conf["gsheet_name"]
-                        )
+                        logging.warning("Google Sheet not initialized. Retrying connection...")
                         gsheet = gSheetLogger(
                             key_file=log_conf["gsheet_auth"],
                             gsheet_name=log_conf["gsheet_name"],
                             header=log_conf["expected_header"],
                             sheet_idx=0,
                         )
-                        gsheet.sheet.append_row(row)
-                    except Exception as e2:
+                    except Exception as e:
+                        logging.error("Failed to re-initialize gsheet...\n%s" % e)
+
+                if gsheet.sheet:
+                    try:
+                        gsheet.sheet.append_row(row, value_input_option='USER_ENTERED')
+                    except Exception as e:
                         logging.error(
-                            "Last try to re-initialize gsheet: %s...sleeping 30s first"
-                            % log_conf["gsheet_name"]
+                            "Failed to append to gsheet: %s...\n%s"
+                            % (log_conf["gsheet_name"], e)
                         )
-                        time.sleep(30)
-                        gsheet = gSheetLogger(
-                            key_file=log_conf["gsheet_auth"],
-                            gsheet_name=log_conf["gsheet_name"],
-                            header=log_conf["expected_header"],
-                            sheet_idx=0,
-                        )
-                        gsheet.sheet.append_row(row)
+                        try:
+                            logging.error(
+                                "Trying to re-initialize gsheet: %s..."
+                                % log_conf["gsheet_name"]
+                            )
+                            gsheet = gSheetLogger(
+                                key_file=log_conf["gsheet_auth"],
+                                gsheet_name=log_conf["gsheet_name"],
+                                header=log_conf["expected_header"],
+                                sheet_idx=0,
+                            )
+                            if gsheet.sheet:
+                                gsheet.sheet.append_row(row, value_input_option='USER_ENTERED')
+                        except Exception as e2:
+                            logging.error(
+                                "Last try to re-initialize gsheet: %s...sleeping 30s first"
+                                % log_conf["gsheet_name"]
+                            )
+                            time.sleep(30)
+                            gsheet = gSheetLogger(
+                                key_file=log_conf["gsheet_auth"],
+                                gsheet_name=log_conf["gsheet_name"],
+                                header=log_conf["expected_header"],
+                                sheet_idx=0,
+                            )
+                            if gsheet.sheet:
+                                gsheet.sheet.append_row(row, value_input_option='USER_ENTERED')
                         
 
 

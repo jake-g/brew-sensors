@@ -7,7 +7,7 @@ import logging
 import bluetooth._bluetooth as bluez
 import blescan
 
-from sensors import celcius_to_fahrenheit
+from sensors import celcius_to_fahrenheit, fahrenheit_to_celcius
 
 TILTS = {
     "a495bb10c5b14b44b5121370f02d74de": "Red",
@@ -65,7 +65,7 @@ class TiltHydrometerSensor:
                     "temperature_F": tilt_reading.get_temp_f(),
                     "gravity": tilt_reading.get_gravity(),
                 }
-            if self.starting_gravity > 0:
+            if self.starting_gravity is not None and self.starting_gravity > 0:
                 reading["alcohol_%"] = 132.25 * (
                     self.starting_gravity - tilt_reading.get_gravity()
                 )
@@ -107,8 +107,7 @@ def get_tilt(color, tries=3):
         # print "ble thread started"
 
     except:
-        print
-        "error accessing bluetooth device..."
+        print("error accessing bluetooth device...")
         if tries > 1:
             time.sleep(1)
             return get_tilt(color, tries - 1)
