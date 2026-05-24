@@ -1,6 +1,6 @@
 # Sensor Logging System
 
-A Python-based system for logging physical and virtual sensors (I2C, Bluetooth Low Energy, and Web APIs) to multiple destinations, including local TSV files, a local HTTP JSON status server, and Google Sheets. 
+A Python-based system for logging physical and virtual sensors (I2C, Bluetooth Low Energy, and Web APIs) to multiple destinations, including local TSV files, a local HTTP JSON status server, and Google Sheets.
 
 This repository contains configurations for two primary logging setups:
 1. **Brew Logger (Main / Active)**: The main production setup used for fermentation tracking. It monitors ambient environment I2C sensors and a Bluetooth-based Tilt Hydrometer, logging data locally and backing up to Google Sheets.
@@ -81,7 +81,18 @@ To log data directly to Google Sheets:
 3. Save the JSON key under `auth/brew-secret.json` (or `auth/solar-secret.json` for solar monitoring).
 4. Share the destination Google Sheet with the Service Account's email address.
 
+### 3. OpenWeatherMap Authentication
+To query virtual weather forecasts for your GPS coordinates:
+1. Register and generate an API key on [OpenWeatherMap](https://openweathermap.org/).
+2. Create a JSON credentials file under `auth/openweathermap.json` with the following structure:
+   ```json
+   {
+     "api_key": "your_openweathermap_api_key_here"
+   }
+   ```
+
 ---
+
 
 ## Running the Loggers
 
@@ -178,4 +189,3 @@ This application is designed to run 24/7 as a background systemd service on a Ra
    *(Note: DietPi users can also use `dietpi-services restart brew-logger` to control the service).*
 
 For developer notes, active bugs, and codebase health status, see [DEV_NOTES.md](file:///Users/jakegarrison/Downloads/projects/sensors/DEV_NOTES.md).
-

@@ -17,7 +17,10 @@ sys.modules["adafruit_bme280.basic"] = MagicMock()
 sys.modules["adafruit_sgp30"] = MagicMock()
 
 import unittest
-from sensors import celcius_to_fahrenheit, fahrenheit_to_celcius, Timestamp
+
+from sensors import celcius_to_fahrenheit
+from sensors import fahrenheit_to_celcius
+from sensors import Timestamp
 
 
 class TestSensors(unittest.TestCase):

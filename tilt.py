@@ -1,13 +1,14 @@
 from __future__ import print_function
 
 import argparse
-import time
 import logging
+import time
 
 import bluetooth._bluetooth as bluez
-import blescan
 
-from sensors import celcius_to_fahrenheit, fahrenheit_to_celcius
+import blescan
+from sensors import celcius_to_fahrenheit
+from sensors import fahrenheit_to_celcius
 
 TILTS = {
     "a495bb10c5b14b44b5121370f02d74de": "Red",

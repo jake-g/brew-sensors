@@ -1,12 +1,14 @@
-import logging
 from datetime import datetime
+import logging
 import os
 import time
-import requests
 
-from pytz import timezone
-import board
-
+# BH1750 - Light Sensor
+# Used to measure ambient light intensity
+import adafruit_bh1750
+# BME280 - Temperature, Humidity, and Barometric Pressure Sensor
+# Used to measure temperature, humidity, and barometric pressure
+from adafruit_bme280 import basic as adafruit_bme280
 ######## i2c ##########
 # INA219 - High Side DC Current Sensor
 # Used to measure DC voltage, current, power, and energy
@@ -14,27 +16,24 @@ import adafruit_ina219
 # INA260 - High/Low Side DC Current Sensor
 # Used to measure voltage, current, power, and energy for both high and low-side applications
 import adafruit_ina260
-# BH1750 - Light Sensor
-# Used to measure ambient light intensity
-import adafruit_bh1750
+# MCP9808 - Temperature Sensor
+# Used to measure ambient temperature with high accuracy
+import adafruit_mcp9808
+# SGP30 - Air Quality Sensor
+# Used to measure indoor air quality (TVOC and CO2eq)
+import adafruit_sgp30
+# TSL2591 - Light Sensor
+# Used to measure ambient light intensity with both visible and infrared light sensors
+import adafruit_tsl2591
 # VEML6070 - UV Light Sensor
 # Used to measure the intensity of ultraviolet (UV) light
 import adafruit_veml6070
 # VEML7700 - Ambient Light Sensor
 # Used to measure ambient light intensity, with high precision and dynamic range
 import adafruit_veml7700
-# TSL2591 - Light Sensor
-# Used to measure ambient light intensity with both visible and infrared light sensors
-import adafruit_tsl2591
-# MCP9808 - Temperature Sensor
-# Used to measure ambient temperature with high accuracy
-import adafruit_mcp9808
-# BME280 - Temperature, Humidity, and Barometric Pressure Sensor
-# Used to measure temperature, humidity, and barometric pressure
-from adafruit_bme280 import basic as adafruit_bme280
-# SGP30 - Air Quality Sensor
-# Used to measure indoor air quality (TVOC and CO2eq)
-import adafruit_sgp30
+import board
+from pytz import timezone
+import requests
 
 
 def celcius_to_fahrenheit(celcius):
@@ -97,10 +96,10 @@ class ForcastOpenWeather:
                         last_reading_delta, self.rate_limit_seconds)
                 )
                 reading = self.last_reading.copy()
-                
+
             # Convert measurements
             if reading["humidity"]: # convert to 0 to 1 scale
-              reading["humidity"] = reading["humidity"] / 100.0 
+              reading["humidity"] = reading["humidity"] / 100.0
             if self.use_celcius:
                 reading["temperature_C"] = fahrenheit_to_celcius(
                     reading.pop("temperature_F", None)

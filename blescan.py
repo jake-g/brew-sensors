@@ -17,8 +17,9 @@ DEBUG = False
 # should be used for BLE. Always start a struct.pack() format string with "<"
 
 import os
-import sys
 import struct
+import sys
+
 import bluetooth._bluetooth as bluez
 
 LE_META_EVENT = 0x3e

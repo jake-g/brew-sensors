@@ -1,10 +1,12 @@
 from __future__ import print_function
 
+import json
 import logging
 import time
-import json
 
-from loggers import gSheetLogger, TsvLogger, StatusServer
+from loggers import gSheetLogger
+from loggers import StatusServer
+from loggers import TsvLogger
 
 
 def main(sensor_map, log_conf):
@@ -87,18 +89,18 @@ def main(sensor_map, log_conf):
                     tsv_log = TsvLogger(
                         log_conf["local_logfile"], log_conf["expected_header"]
                     )
-                    
+
             if json_status:
                 try:
                     json_status.write(
-                        status_filename='status.json', 
+                        status_filename='status.json',
                         status_dict=dict(zip(log_conf["expected_header"], row))
                     )
                 except Exception as e:
                     logging.error(
                         "Failed to write status to json: %s...\n%s"
                         % (log_conf["local_json_path"], e)
-                    ) 
+                    )
 
             if gsheet:
                 if not gsheet.sheet:
@@ -148,7 +150,7 @@ def main(sensor_map, log_conf):
                             )
                             if gsheet.sheet:
                                 gsheet.sheet.append_row(row, value_input_option='USER_ENTERED')
-                        
+
 
 
 

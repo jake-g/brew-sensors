@@ -1,13 +1,14 @@
 from __future__ import print_function
 
-import gspread
+import http.server
+import json
 import logging
 import os
-import pandas
-import json
 import threading
-import http.server
+
+import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+import pandas
 
 
 class gSheetLogger:
@@ -26,7 +27,7 @@ class gSheetLogger:
     def _authorize_client(
         self,
         key_file,
-        n_tries=5, 
+        n_tries=5,
         scope=(
             "https://spreadsheets.google.com/feeds",
             "https://www.googleapis.com/auth/drive",
@@ -109,7 +110,7 @@ class StatusServer:
                         {'__init__': _init, 'directory': directory})
         try:
             server = http.server.HTTPServer(
-                server_address=(self.host, self.port), 
+                server_address=(self.host, self.port),
                 RequestHandlerClass=handler_from(self.json_path)
             )
             thread = threading.Thread(target = server.serve_forever)

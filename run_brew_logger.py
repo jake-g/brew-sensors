@@ -1,7 +1,9 @@
+import json
 import os
+
+from runner import main
 import sensors
 import tilt
-from runner import main
 
 BEER_NAME = "session hops 9-29"
 STARTING_GRAVITY = 1.045
@@ -14,8 +16,11 @@ GPS_LNG = -122.3185902
 
 # Color of the tilt sensor to log
 TILT_COLOR = "black"
-# Open Weather API Key
-OPENWEATHER_AUTH = "PLACEHOLDER"
+# Open Weather API Key loaded from ignored auth file
+cwd = os.path.dirname(os.path.realpath(__file__))
+owm_auth_path = os.path.join(cwd, "auth/openweathermap.json")
+with open(owm_auth_path, "r") as f:
+    OPENWEATHER_AUTH = json.load(f)["api_key"]
 # Dictionary mapping sensor name to sensor objects to be logged
 SENSOR_MAP = {
     "clock": sensors.Timestamp(timezone=TIMEZONE),

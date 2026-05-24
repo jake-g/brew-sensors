@@ -12,6 +12,7 @@ sys.modules["oauth2client.service_account"] = MagicMock()
 import os
 import tempfile
 import unittest
+
 from loggers import TsvLogger
 
 

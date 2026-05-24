@@ -15,7 +15,7 @@
  Type=idle
  User=root
  Group=dietpi
- SyslogIdentifier=brew-logger 
+ SyslogIdentifier=brew-logger
  ExecStart=/usr/bin/python3 /home/dietpi/sensors/run_brew_logger.py
  Restart=Always
 
