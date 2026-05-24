@@ -14,3 +14,5 @@ old/
 *.code-workspace
 .st*
 .DS_Store
+solar_sensor/
+DEV_NOTES.md
