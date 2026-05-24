@@ -3,14 +3,14 @@ import sensors
 import tilt
 from runner import main
 
-BEER_NAME = "white_ale"
-STARTING_GRAVITY = 1.056
+BEER_NAME = "session hops 9-29"
+STARTING_GRAVITY = 1.045
 
 # Local Parameters
 TIMEZONE = "US/Pacific"
-# UW
-GPS_LAT = 47.655548
-GPS_LNG = -122.303200
+# 2119 62
+GPS_LAT = 47.6778094
+GPS_LNG = -122.3185902
 
 # Color of the tilt sensor to log
 TILT_COLOR = "black"
