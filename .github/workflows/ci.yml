@@ -19,6 +19,10 @@ jobs:
         with:
           python-version: "3.9"
 
+      - name: 📦 Install Test Dependencies
+        run: |
+          pip install pytz requests
+
       - name: 🧪 Run Unit Tests
         run: |
           make test
