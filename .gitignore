@@ -5,6 +5,7 @@ old/
 *logs/
 
 *.zip
+*.lnk
 *.pyc
 *.tsv
 *.csv

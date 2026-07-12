@@ -188,4 +188,4 @@ This application is designed to run 24/7 as a background systemd service on a Ra
    ```
    *(Note: DietPi users can also use `dietpi-services restart brew-logger` to control the service).*
 
-For developer notes, active bugs, and codebase health status, see [DEV_NOTES.md](file:///Users/jakegarrison/Downloads/projects/sensors/DEV_NOTES.md).
+For developer notes, active bugs, and codebase health status, see [DEV_NOTES.md](DEV_NOTES.md).
