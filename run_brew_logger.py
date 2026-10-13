@@ -5,8 +5,8 @@ from runner import main
 import sensors
 import tilt
 
-BEER_NAME = "session hops 9-29"
-STARTING_GRAVITY = 1.045
+BEER_NAME = "japanese rice lager"
+STARTING_GRAVITY = 1.05
 
 # Local Parameters
 TIMEZONE = "US/Pacific"
